@@ -1,6 +1,6 @@
 # IBQ QR Code Generator
 
-A comprehensive, production-ready Python web application for generating QR codes specifically designed for business/visiting cards. Built with Flask and featuring a complete authentication system, professional dashboard, and unlimited QR code generation capabilities.
+A comprehensive, production-ready Python web application for generating QR codes with support for 16 different types. Built with Flask and featuring a complete authentication system, professional dashboard, and unlimited QR code generation capabilities.
 
 ## Features
 
@@ -19,8 +19,20 @@ A comprehensive, production-ready Python web application for generating QR codes
 - **Activity Timeline**: Track recent user actions
 
 ### QR Code Features
+- **16 QR Code Types Supported**:
+  - **Business Card / vCard**: Digital contact information in vCard format
+  - **Website URL**: Direct links to any website
+  - **Plain Text**: Encode any text information
+  - **Email**: Pre-filled email with subject and body
+  - **SMS**: Text messages with pre-filled content
+  - **Phone**: Direct phone call initiation
+  - **WiFi**: One-tap WiFi network connection
+  - **Social Media**: Facebook, Twitter, Instagram, LinkedIn, YouTube profiles
+  - **App Stores**: Apple App Store and Google Play Store links
+  - **Calendar Events**: iCal format event details
+  - **Location**: Geographic coordinates for maps
 - **Unlimited Generation**: Create unlimited QR codes without throttling
-- **Business Card Format**: vCard format for easy contact information sharing
+- **Smart Form Interface**: Dynamic form fields based on selected QR code type
 - **Customization**: Custom colors, sizes, error correction levels
 - **Multiple Formats**: Export as PNG, SVG, or PDF
 - **Template System**: Save and reuse favorite settings
@@ -32,6 +44,7 @@ A comprehensive, production-ready Python web application for generating QR codes
 - **Download Tracking**: Monitor QR code views and downloads
 - **API Key Generation**: For programmatic access (developer feature)
 - **Comprehensive Help**: Documentation, FAQ, and support pages
+- **Type-Specific Tips**: Contextual help for each QR code type
 
 ## Tech Stack
 
@@ -127,24 +140,65 @@ IBQ-QR-Code-Generator/
 
 1. Log in to your account
 2. Click "Generate QR Code" in the sidebar
-3. Fill in the business card information:
-   - Name, title, company
-   - Email, phone, website
-   - Address
-4. Customize appearance (optional):
-   - Choose colors
-   - Set size and error correction
-   - Select output format
-5. Click "Generate QR Code"
-6. Download your QR code
+3. Select the QR Code Type from the dropdown:
+   - **Business Card / vCard**: For contact information
+   - **Website URL**: For directing to websites
+   - **Plain Text**: For any text content
+   - **Email**: For pre-filled emails
+   - **SMS**: For text messages
+   - **Phone**: For phone calls
+   - **WiFi**: For WiFi network access
+   - **Social Media**: For social profiles
+   - **App Store**: For app downloads
+   - **Calendar Event**: For event invitations
+   - **Location**: For map directions
+4. Fill in the relevant information for your selected type:
+   - Form fields automatically update based on QR code type
+   - Contextual tips appear in the sidebar
+5. Customize appearance (optional):
+   - Choose foreground and background colors
+   - Set size and error correction level
+   - Select output format (PNG, SVG, or PDF)
+   - Apply a template
+6. Click "Generate QR Code"
+7. Download your QR code
+
+### QR Code Type Examples
+
+**Business Card**:
+- Perfect for networking events and professional contacts
+- Saves contact information directly to phone
+
+**Website URL**:
+- Direct customers to your website
+- Link to product pages or promotions
+
+**WiFi**:
+- Share WiFi access with guests
+- No need to manually enter passwords
+
+**Email**:
+- Pre-fill support emails
+- Collect feedback easily
+
+**SMS**:
+- Quick customer service responses
+- Contest entries and voting
+
+**Phone**:
+- One-tap calling for customer support
+- Emergency contact information
+
+For detailed examples and best practices, see [QR_CODE_TYPES_GUIDE.md](QR_CODE_TYPES_GUIDE.md)
 
 ### Managing QR Codes
 
 - **View All**: Navigate to "My QR Codes" to see all generated codes
 - **Search**: Use the search bar to find specific QR codes
-- **Filter**: Filter by category
+- **Filter**: Filter by category or type
 - **Edit**: Update name, description, and category
 - **Download**: Download in the original format
+- **Share**: Get shareable links for vCard types
 - **Delete**: Remove unwanted QR codes
 
 ### Using Templates
@@ -318,10 +372,19 @@ This project is licensed under the MIT License.
 
 ## Version History
 
+### v2.0.0 (2026)
+- **Major Feature Update**: Added support for 16 different QR code types
+- New QR code types: URL, Text, Email, SMS, Phone, WiFi, Social Media, App Stores, Calendar Events, Location
+- Dynamic form interface with type-specific fields
+- Contextual help and tips for each QR code type
+- Enhanced utils with specialized data generation functions
+- Comprehensive QR Code Types Guide documentation
+- Improved user experience with smart field visibility
+
 ### v1.0.0 (2024)
 - Initial release
 - Complete authentication system
-- QR code generation and management
+- QR code generation and management (vCard/Business Card only)
 - Template system
 - Dark/light theme support
 - Comprehensive documentation
