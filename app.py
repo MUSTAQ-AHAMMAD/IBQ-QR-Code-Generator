@@ -313,7 +313,11 @@ def create_app(config_name='default'):
                 # Generate vCard data for storage
                 vcard_data = generate_vcard(contact_data)
                 
-                # Create QR code record first to get the ID
+                # Generate public token first
+                import secrets
+                public_token = secrets.token_urlsafe(16)
+                
+                # Create QR code record
                 qr_code = QRCode(
                     user_id=current_user.id,
                     name=form.name.data,
@@ -328,14 +332,12 @@ def create_app(config_name='default'):
                     contact_address=form.contact_address.data,
                     qr_data=vcard_data,
                     qr_type='vcard',
+                    public_token=public_token,
                     template_id=form.template_id.data if form.template_id.data else None
                 )
                 
-                # Generate public token for URL
-                qr_code.generate_public_token()
-                
                 # Generate profile URL for QR code
-                profile_url = url_for('contact_profile', token=qr_code.public_token, _external=True)
+                profile_url = request.url_root.rstrip('/') + url_for('contact_profile', token=public_token)
                 
                 # QR code settings
                 settings = {
