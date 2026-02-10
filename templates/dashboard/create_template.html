@@ -1,0 +1,111 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Create Template - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('templates') }}">Templates</a></li>
+                <li class="breadcrumb-item active">Create Template</li>
+            </ol>
+        </nav>
+        <h2>Create Template</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="e.g., My Custom Template") }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="2", placeholder="Describe your template") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.category.label(class="form-label") }}
+                        {{ form.category(class="form-control", placeholder="e.g., business, personal") }}
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        {{ form.is_public(class="form-check-input") }}
+                        {{ form.is_public.label(class="form-check-label") }}
+                        <div class="form-text">Public templates can be used by other users</div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h5 class="mb-3">Template Settings</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.foreground_color.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.foreground_color(class="form-control", type="color") }}
+                                <span class="input-group-text">Foreground</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.background_color.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.background_color(class="form-control", type="color") }}
+                                <span class="input-group-text">Background</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ form.size.label(class="form-label") }}
+                            {{ form.size(class="form-control", placeholder="300") }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.error_correction.label(class="form-label") }}
+                            {{ form.error_correction(class="form-select") }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.border.label(class="form-label") }}
+                            {{ form.border(class="form-control", placeholder="4") }}
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('templates') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>About Templates</h5>
+            </div>
+            <div class="card-body">
+                <p class="small">Templates allow you to save your favorite QR code settings for quick reuse.</p>
+                <p class="small mb-0">Once created, you can select a template when generating new QR codes to apply these settings automatically.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

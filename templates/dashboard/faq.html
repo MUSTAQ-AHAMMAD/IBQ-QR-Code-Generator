@@ -1,0 +1,155 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}FAQ - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('help_page') }}">Help & Support</a></li>
+                <li class="breadcrumb-item active">FAQ</li>
+            </ol>
+        </nav>
+        <h2>Frequently Asked Questions</h2>
+        <p class="text-muted">Find answers to common questions</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                What is a QR code?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                A QR (Quick Response) code is a two-dimensional barcode that can be scanned using a smartphone camera to quickly access information. It can store various types of data including URLs, contact information, text, and more.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                How many QR codes can I generate?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                You can generate unlimited QR codes with your account. There are no restrictions on the number of QR codes you can create.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                What format should I use for my QR code?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li><strong>PNG:</strong> Best for digital use and web display</li>
+                                    <li><strong>SVG:</strong> Vector format, ideal for scalable graphics and print</li>
+                                    <li><strong>PDF:</strong> Good for documents and professional printing</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                What is error correction?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Error correction allows QR codes to be read even if they're partially damaged or obscured. Higher levels of error correction make the code more reliable but also larger. We recommend High (30%) for codes with logos.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                Can I edit a QR code after generating it?
+                            </button>
+                        </h2>
+                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                You can edit the name, description, and category of a QR code, but the QR code image itself cannot be modified. To change the content or appearance, you'll need to generate a new QR code.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                                How do I test my QR code?
+                            </button>
+                        </h2>
+                        <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Simply open your smartphone camera app and point it at the QR code. Most modern smartphones will automatically detect and scan the code, displaying the encoded information or offering to save the contact details.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                                What is a vCard?
+                            </button>
+                        </h2>
+                        <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                vCard is a standard format for electronic business cards. When someone scans a vCard QR code, they can instantly save the contact information to their phone's address book.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                                Is my data secure?
+                            </button>
+                        </h2>
+                        <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                Yes! We use industry-standard security practices including password hashing, CSRF protection, and secure session management. Your data is stored securely and is only accessible to you.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Still Need Help?</h5>
+            </div>
+            <div class="card-body">
+                <p>Can't find what you're looking for?</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('documentation') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-book me-2"></i>View Documentation
+                    </a>
+                    <a href="{{ url_for('contact') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-envelope me-2"></i>Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

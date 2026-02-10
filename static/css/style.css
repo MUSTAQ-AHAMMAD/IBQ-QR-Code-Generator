@@ -1,0 +1,176 @@
+/* Custom CSS for IBQ QR Code Generator */
+
+:root {
+    --sidebar-width: 250px;
+}
+
+/* Sidebar */
+#sidebar-wrapper {
+    min-height: 100vh;
+    width: var(--sidebar-width);
+    transition: margin 0.25s ease-out;
+}
+
+.sidebar-heading {
+    padding: 1rem;
+}
+
+#sidebar-wrapper .list-group-item {
+    border: none;
+    padding: 0.75rem 1.5rem;
+}
+
+#sidebar-wrapper .list-group-item.active {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-left: 3px solid #fff;
+}
+
+#sidebar-wrapper .list-group-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Page Content */
+#page-content-wrapper {
+    min-width: 0;
+    width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: calc(-1 * var(--sidebar-width));
+    }
+    
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: 0;
+    }
+}
+
+/* Dark theme */
+[data-bs-theme="dark"] {
+    --bs-body-bg: #1a1a1a;
+    --bs-body-color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .bg-light {
+    background-color: #2d2d2d !important;
+}
+
+[data-bs-theme="dark"] .card {
+    background-color: #2d2d2d;
+    border-color: #404040;
+}
+
+[data-bs-theme="dark"] .list-group-item {
+    background-color: #2d2d2d;
+    border-color: #404040;
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .navbar {
+    background-color: #2d2d2d !important;
+    border-color: #404040 !important;
+}
+
+/* Authentication pages */
+.min-vh-100 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.min-vh-100 .card {
+    border: none;
+    border-radius: 15px;
+}
+
+/* QR Code cards */
+.card img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Timeline */
+.timeline {
+    position: relative;
+}
+
+.timeline li {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline li::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 10px;
+    bottom: -10px;
+    width: 1px;
+    background-color: #dee2e6;
+}
+
+.timeline li:last-child::before {
+    display: none;
+}
+
+/* Animations */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Print styles */
+@media print {
+    #sidebar-wrapper,
+    .navbar,
+    .breadcrumb,
+    .btn {
+        display: none !important;
+    }
+}
+
+/* Custom utilities */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.user-select-all {
+    user-select: all;
+}
+
+/* Badge colors */
+.badge {
+    font-weight: 500;
+}
+
+/* Forms */
+input[type="color"] {
+    height: 38px;
+    padding: 0.375rem;
+}
+
+/* Cards hover effect */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading spinner */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+}

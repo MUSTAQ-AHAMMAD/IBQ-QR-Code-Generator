@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="d-flex" id="wrapper">
+    <!-- Sidebar -->
+    <div class="bg-dark text-white" id="sidebar-wrapper">
+        <div class="sidebar-heading border-bottom bg-dark">
+            <h5 class="mt-2 mb-2">
+                <i class="bi bi-qr-code"></i>
+                {{ app_name }}
+            </h5>
+        </div>
+        <div class="list-group list-group-flush">
+            <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+            </a>
+            
+            <div class="list-group-item bg-dark text-white border-0 py-2">
+                <small class="text-muted fw-bold">GENERATE</small>
+            </div>
+            <a href="{{ url_for('generate_qr') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint == 'generate_qr' %}active{% endif %}">
+                <i class="bi bi-plus-circle me-2"></i>Generate QR Code
+            </a>
+            
+            <div class="list-group-item bg-dark text-white border-0 py-2">
+                <small class="text-muted fw-bold">MANAGE</small>
+            </div>
+            <a href="{{ url_for('my_qr_codes') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint == 'my_qr_codes' %}active{% endif %}">
+                <i class="bi bi-collection me-2"></i>My QR Codes
+            </a>
+            <a href="{{ url_for('templates') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint in ['templates', 'create_template'] %}active{% endif %}">
+                <i class="bi bi-palette me-2"></i>Templates
+            </a>
+            
+            <div class="list-group-item bg-dark text-white border-0 py-2">
+                <small class="text-muted fw-bold">SETTINGS</small>
+            </div>
+            <a href="{{ url_for('settings_profile') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint == 'settings_profile' %}active{% endif %}">
+                <i class="bi bi-person me-2"></i>Profile
+            </a>
+            <a href="{{ url_for('settings_account') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint == 'settings_account' %}active{% endif %}">
+                <i class="bi bi-gear me-2"></i>Account Settings
+            </a>
+            <a href="{{ url_for('settings_password') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint == 'settings_password' %}active{% endif %}">
+                <i class="bi bi-shield-lock me-2"></i>Security
+            </a>
+            <a href="{{ url_for('settings_api_key') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint == 'settings_api_key' %}active{% endif %}">
+                <i class="bi bi-key me-2"></i>API Key
+            </a>
+            
+            <div class="list-group-item bg-dark text-white border-0 py-2">
+                <small class="text-muted fw-bold">SUPPORT</small>
+            </div>
+            <a href="{{ url_for('help_page') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint == 'help_page' %}active{% endif %}">
+                <i class="bi bi-question-circle me-2"></i>Help & Support
+            </a>
+            <a href="{{ url_for('documentation') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint == 'documentation' %}active{% endif %}">
+                <i class="bi bi-book me-2"></i>Documentation
+            </a>
+            <a href="{{ url_for('faq') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint == 'faq' %}active{% endif %}">
+                <i class="bi bi-chat-left-text me-2"></i>FAQ
+            </a>
+            <a href="{{ url_for('contact') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint == 'contact' %}active{% endif %}">
+                <i class="bi bi-envelope me-2"></i>Contact
+            </a>
+            
+            <div class="list-group-item bg-dark text-white border-0 mt-3">
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm w-100">
+                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Page Content -->
+    <div id="page-content-wrapper" class="w-100">
+        <!-- Top Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+            <div class="container-fluid">
+                <button class="btn btn-outline-secondary" id="sidebarToggle">
+                    <i class="bi bi-list"></i>
+                </button>
+                
+                <div class="ms-auto d-flex align-items-center">
+                    <button class="btn btn-outline-secondary me-2" id="themeToggle" title="Toggle theme">
+                        <i class="bi bi-moon-stars" id="themeIcon"></i>
+                    </button>
+                    
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i>
+                            {{ current_user.username }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('settings_profile') }}">
+                                <i class="bi bi-person me-2"></i>Profile
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('settings_account') }}">
+                                <i class="bi bi-gear me-2"></i>Settings
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                                <i class="bi bi-box-arrow-right me-2"></i>Logout
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <div class="container-fluid p-4">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-4">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
