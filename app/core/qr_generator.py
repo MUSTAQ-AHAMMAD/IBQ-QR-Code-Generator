@@ -45,7 +45,7 @@ class QRCodeGenerator:
     
     def _generate_cache_key(self, request: QRCodeRequest) -> str:
         """Generate cache key from request"""
-        data = f"{request.business_card.json()}{request.size}{request.border}{request.error_correction}"
+        data = f"{request.business_card.json()}{request.size}{request.border}{request.error_correction}{request.foreground_color}{request.background_color}{request.output_format}{request.include_logo}"
         return hashlib.md5(data.encode()).hexdigest()
     
     def _create_qr_code(self, data: str, request: QRCodeRequest) -> qrcode.QRCode:
