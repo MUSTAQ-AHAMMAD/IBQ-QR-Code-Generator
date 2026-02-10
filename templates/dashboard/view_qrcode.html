@@ -236,28 +236,41 @@
 <script>
 function copyShareUrl() {
     const urlInput = document.getElementById('shareUrl');
-    urlInput.select();
-    urlInput.setSelectionRange(0, 99999); // For mobile devices
+    const successAlert = document.getElementById('copySuccess');
     
-    navigator.clipboard.writeText(urlInput.value).then(() => {
-        const successAlert = document.getElementById('copySuccess');
-        successAlert.classList.remove('d-none');
-        setTimeout(() => {
-            successAlert.classList.add('d-none');
-        }, 3000);
-    }).catch(err => {
-        // Fallback for browsers that don't support clipboard API
-        try {
-            document.execCommand('copy');
-            const successAlert = document.getElementById('copySuccess');
+    // Try modern clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(urlInput.value).then(() => {
             successAlert.classList.remove('d-none');
             setTimeout(() => {
                 successAlert.classList.add('d-none');
             }, 3000);
+        }).catch(err => {
+            // Fallback to execCommand
+            fallbackCopy();
+        });
+    } else {
+        // Direct fallback for older browsers
+        fallbackCopy();
+    }
+    
+    function fallbackCopy() {
+        try {
+            urlInput.select();
+            urlInput.setSelectionRange(0, 99999); // For mobile devices
+            const successful = document.execCommand('copy');
+            if (successful) {
+                successAlert.classList.remove('d-none');
+                setTimeout(() => {
+                    successAlert.classList.add('d-none');
+                }, 3000);
+            } else {
+                alert('Failed to copy URL. Please copy it manually.');
+            }
         } catch (e) {
             alert('Failed to copy URL. Please copy it manually.');
         }
-    });
+    }
 }
 </script>
 {% endif %}

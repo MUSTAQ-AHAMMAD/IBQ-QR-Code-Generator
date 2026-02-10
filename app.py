@@ -149,9 +149,17 @@ def create_app(config_name='default'):
         # Generate vCard content
         vcard_content = qr_code.qr_data
         
+        # Sanitize filename for Content-Disposition header
+        filename = qr_code.contact_name or "contact"
+        # Remove or replace characters that could break the header
+        filename = "".join(c for c in filename if c.isalnum() or c in (' ', '-', '_')).strip()
+        filename = filename.replace(' ', '_')[:50]  # Limit length and replace spaces
+        if not filename:
+            filename = "contact"
+        
         # Create response with vCard content
         response = Response(vcard_content, mimetype='text/vcard')
-        response.headers['Content-Disposition'] = f'attachment; filename="{qr_code.contact_name or "contact"}.vcf"'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}.vcf"'
         
         # Atomic update to avoid race conditions
         QRCode.query.filter_by(id=qr_code.id).update({'download_count': QRCode.download_count + 1})
