@@ -2,6 +2,7 @@
 Forms for the QR Code Generator application.
 """
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, IntegerField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, Optional, URL
 from models import User
@@ -99,6 +100,7 @@ class QRCodeGenerateForm(FlaskForm):
     contact_company = StringField('Company', validators=[Optional(), Length(max=100)])
     contact_title = StringField('Job Title', validators=[Optional(), Length(max=100)])
     contact_address = TextAreaField('Address', validators=[Optional(), Length(max=500)])
+    contact_image = FileField('Profile Image', validators=[Optional(), FileAllowed(['png', 'jpg', 'jpeg'], 'Images only!')])
     
     # URL field
     url = StringField('URL', validators=[Optional(), Length(max=2000)])

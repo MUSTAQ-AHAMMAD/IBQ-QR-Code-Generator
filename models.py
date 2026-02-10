@@ -112,6 +112,7 @@ class QRCode(db.Model):
     error_correction = db.Column(db.String(1), default='H')
     border = db.Column(db.Integer, default=4)
     logo_path = db.Column(db.String(500))
+    custom_image_path = db.Column(db.String(500))
     
     # Template
     template_id = db.Column(db.Integer, db.ForeignKey('templates.id'))
