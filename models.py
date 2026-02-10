@@ -113,6 +113,17 @@ class QRCode(db.Model):
     border = db.Column(db.Integer, default=4)
     logo_path = db.Column(db.String(500))
     
+    # Advanced design options
+    qr_style = db.Column(db.String(20), default='square')  # square, rounded, dots, circles
+    gradient_enabled = db.Column(db.Boolean, default=False)
+    gradient_color = db.Column(db.String(7))
+    gradient_type = db.Column(db.String(20), default='linear')  # linear, radial
+    frame_style = db.Column(db.String(20))  # none, basic, banner, bottom-text
+    frame_text = db.Column(db.String(100))
+    frame_color = db.Column(db.String(7), default='#000000')
+    eye_style = db.Column(db.String(20), default='square')  # square, rounded, circle
+    data_style = db.Column(db.String(20), default='square')  # square, rounded, circle, dot
+    
     # Template
     template_id = db.Column(db.Integer, db.ForeignKey('templates.id'))
     

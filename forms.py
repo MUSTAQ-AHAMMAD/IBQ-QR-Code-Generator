@@ -2,6 +2,7 @@
 Forms for the QR Code Generator application.
 """
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, IntegerField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, Optional, URL
 from models import User
@@ -162,6 +163,40 @@ class QRCodeGenerateForm(FlaskForm):
         ('svg', 'SVG'),
         ('pdf', 'PDF')
     ], default='png')
+    
+    # Advanced design options
+    logo = FileField('Logo Image', validators=[FileAllowed(['png', 'jpg', 'jpeg'], 'Images only!')])
+    qr_style = SelectField('QR Code Style', choices=[
+        ('square', 'Square (Classic)'),
+        ('rounded', 'Rounded Corners'),
+        ('dots', 'Dots'),
+        ('circles', 'Circles')
+    ], default='square')
+    gradient_enabled = BooleanField('Enable Gradient')
+    gradient_color = StringField('Gradient Color', validators=[Optional()])
+    gradient_type = SelectField('Gradient Type', choices=[
+        ('linear', 'Linear'),
+        ('radial', 'Radial')
+    ], default='linear')
+    frame_style = SelectField('Frame Style', choices=[
+        ('none', 'No Frame'),
+        ('basic', 'Basic Frame'),
+        ('banner', 'Banner Frame'),
+        ('bottom-text', 'Bottom Text Frame')
+    ], default='none')
+    frame_text = StringField('Frame Text', validators=[Optional(), Length(max=100)])
+    frame_color = StringField('Frame Color', validators=[Optional()], default='#000000')
+    eye_style = SelectField('Eye Style', choices=[
+        ('square', 'Square'),
+        ('rounded', 'Rounded'),
+        ('circle', 'Circle')
+    ], default='square')
+    data_style = SelectField('Data Pattern Style', choices=[
+        ('square', 'Square'),
+        ('rounded', 'Rounded'),
+        ('circle', 'Circle'),
+        ('dot', 'Dot')
+    ], default='square')
     
     template_id = SelectField('Template', coerce=int, validators=[Optional()])
     

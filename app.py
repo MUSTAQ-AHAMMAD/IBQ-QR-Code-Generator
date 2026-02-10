@@ -381,13 +381,34 @@ def create_app(config_name='default'):
                 else:
                     qr_code_data = qr_data
                 
+                # Handle logo upload
+                logo_path = None
+                if form.logo.data:
+                    from werkzeug.utils import secure_filename
+                    logo_file = form.logo.data
+                    # Sanitize the filename
+                    safe_name = secure_filename(form.name.data)
+                    logo_filename = generate_filename('logo_' + safe_name, 'png')
+                    logo_path = os.path.join(app.config['UPLOAD_FOLDER'], logo_filename)
+                    logo_file.save(logo_path)
+                
                 # QR code settings
                 settings = {
                     'size': form.size.data or 300,
                     'foreground_color': form.foreground_color.data or '#000000',
                     'background_color': form.background_color.data or '#FFFFFF',
                     'error_correction': form.error_correction.data or 'H',
-                    'border': form.border.data or 4
+                    'border': form.border.data or 4,
+                    'logo_path': logo_path,
+                    'qr_style': form.qr_style.data or 'square',
+                    'gradient_enabled': form.gradient_enabled.data or False,
+                    'gradient_color': form.gradient_color.data if form.gradient_enabled.data else None,
+                    'gradient_type': form.gradient_type.data or 'linear',
+                    'frame_style': form.frame_style.data or 'none',
+                    'frame_text': form.frame_text.data if form.frame_style.data != 'none' else None,
+                    'frame_color': form.frame_color.data or '#000000',
+                    'eye_style': form.eye_style.data or 'square',
+                    'data_style': form.data_style.data or 'square'
                 }
                 
                 # Generate QR code
@@ -413,6 +434,16 @@ def create_app(config_name='default'):
                 qr_code.background_color = settings['background_color']
                 qr_code.error_correction = settings['error_correction']
                 qr_code.border = settings['border']
+                qr_code.logo_path = logo_path
+                qr_code.qr_style = settings['qr_style']
+                qr_code.gradient_enabled = settings['gradient_enabled']
+                qr_code.gradient_color = settings['gradient_color']
+                qr_code.gradient_type = settings['gradient_type']
+                qr_code.frame_style = settings['frame_style']
+                qr_code.frame_text = settings['frame_text']
+                qr_code.frame_color = settings['frame_color']
+                qr_code.eye_style = settings['eye_style']
+                qr_code.data_style = settings['data_style']
                 
                 db.session.add(qr_code)
                 db.session.commit()
@@ -516,6 +547,28 @@ def create_app(config_name='default'):
         
         log_action('download_qr_code', 'qr_code', qr_code.id, status='success')
         return send_file(qr_code.file_path, as_attachment=True, download_name=qr_code.filename)
+    
+    @app.route('/uploads/<filename>')
+    @login_required
+    def uploaded_file(filename):
+        """Serve uploaded QR code files."""
+        from werkzeug.utils import secure_filename
+        
+        # Sanitize filename to prevent path traversal
+        safe_filename = secure_filename(filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_filename)
+        
+        # Verify the file exists and is within the upload folder
+        if not os.path.exists(file_path):
+            return "File not found", 404
+        
+        # Verify the resolved path is within the upload folder (additional security)
+        upload_folder = os.path.abspath(app.config['UPLOAD_FOLDER'])
+        file_path = os.path.abspath(file_path)
+        if not file_path.startswith(upload_folder):
+            return "Invalid file path", 403
+            
+        return send_file(file_path)
     
     @app.route('/templates')
     @login_required
