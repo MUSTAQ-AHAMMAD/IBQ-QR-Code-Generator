@@ -245,6 +245,18 @@ function copyShareUrl() {
         setTimeout(() => {
             successAlert.classList.add('d-none');
         }, 3000);
+    }).catch(err => {
+        // Fallback for browsers that don't support clipboard API
+        try {
+            document.execCommand('copy');
+            const successAlert = document.getElementById('copySuccess');
+            successAlert.classList.remove('d-none');
+            setTimeout(() => {
+                successAlert.classList.add('d-none');
+            }, 3000);
+        } catch (e) {
+            alert('Failed to copy URL. Please copy it manually.');
+        }
     });
 }
 </script>
