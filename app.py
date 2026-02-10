@@ -338,7 +338,7 @@ def create_app(config_name='default'):
                 )
                 
                 # Generate profile URL for QR code
-                profile_url = request.url_root.rstrip('/') + url_for('contact_profile', token=public_token)
+                profile_url = url_for('contact_profile', token=public_token, _external=True)
                 
                 # QR code settings
                 settings = {
