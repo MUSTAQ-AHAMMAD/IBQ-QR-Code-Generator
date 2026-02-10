@@ -16,6 +16,9 @@ from forms import (LoginForm, RegistrationForm, QRCodeGenerateForm, QRCodeEditFo
 from utils import generate_vcard, create_qr_code, create_qr_code_svg, save_qr_code, generate_filename, get_qr_code_base64
 from sqlalchemy import desc, func
 
+# Constants
+MAX_VCARD_FILENAME_LENGTH = 50
+
 def create_app(config_name='default'):
     """Application factory."""
     app = Flask(__name__)
@@ -153,7 +156,7 @@ def create_app(config_name='default'):
         filename = qr_code.contact_name or "contact"
         # Remove or replace characters that could break the header
         filename = "".join(c for c in filename if c.isalnum() or c in (' ', '-', '_')).strip()
-        filename = filename.replace(' ', '_')[:50]  # Limit length and replace spaces
+        filename = filename.replace(' ', '_')[:MAX_VCARD_FILENAME_LENGTH]
         if not filename:
             filename = "contact"
         

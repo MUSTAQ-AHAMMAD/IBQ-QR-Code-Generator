@@ -257,7 +257,7 @@ function copyShareUrl() {
     function fallbackCopy() {
         try {
             urlInput.select();
-            urlInput.setSelectionRange(0, 99999); // For mobile devices
+            urlInput.setSelectionRange(0, urlInput.value.length);
             const successful = document.execCommand('copy');
             if (successful) {
                 successAlert.classList.remove('d-none');
