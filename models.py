@@ -97,6 +97,7 @@ class QRCode(db.Model):
     # QR Code data
     qr_data = db.Column(db.Text, nullable=False)
     qr_type = db.Column(db.String(20), default='vcard')  # vcard, url, text, etc.
+    public_token = db.Column(db.String(32), unique=True, index=True)  # Token for public profile URL
     
     # File information
     filename = db.Column(db.String(255))
@@ -122,6 +123,11 @@ class QRCode(db.Model):
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def generate_public_token(self):
+        """Generate a unique public token for the QR code profile URL."""
+        self.public_token = secrets.token_urlsafe(16)
+        return self.public_token
     
     def __repr__(self):
         return f'<QRCode {self.name}>'
