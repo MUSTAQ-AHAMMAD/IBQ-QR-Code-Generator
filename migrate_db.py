@@ -19,15 +19,29 @@ def migrate_database():
     
     # Extract database file path from URI
     if db_uri.startswith('sqlite:///'):
-        db_path = db_uri.replace('sqlite:///', '')
+        db_filename = db_uri.replace('sqlite:///', '')
     else:
         print(f"Error: This migration script only supports SQLite databases.")
         print(f"Current database URI: {db_uri}")
         return False
     
+    # Check both possible locations: root directory and instance folder
+    possible_paths = [
+        db_filename,  # Root directory
+        os.path.join('instance', db_filename)  # Instance folder (Flask default)
+    ]
+    
+    db_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            db_path = path
+            break
+    
     # Check if database file exists
-    if not os.path.exists(db_path):
-        print(f"Database file not found: {db_path}")
+    if db_path is None:
+        print(f"Database file not found in any of these locations:")
+        for path in possible_paths:
+            print(f"  - {path}")
         print("No migration needed - the database will be created with the correct schema.")
         return True
     
