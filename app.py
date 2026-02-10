@@ -384,8 +384,11 @@ def create_app(config_name='default'):
                 # Handle logo upload
                 logo_path = None
                 if form.logo.data:
+                    from werkzeug.utils import secure_filename
                     logo_file = form.logo.data
-                    logo_filename = generate_filename('logo_' + form.name.data, 'png')
+                    # Sanitize the filename
+                    safe_name = secure_filename(form.name.data)
+                    logo_filename = generate_filename('logo_' + safe_name, 'png')
                     logo_path = os.path.join(app.config['UPLOAD_FOLDER'], logo_filename)
                     logo_file.save(logo_path)
                 
@@ -549,9 +552,22 @@ def create_app(config_name='default'):
     @login_required
     def uploaded_file(filename):
         """Serve uploaded QR code files."""
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        from werkzeug.utils import secure_filename
+        
+        # Sanitize filename to prevent path traversal
+        safe_filename = secure_filename(filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_filename)
+        
+        # Verify the file exists and is within the upload folder
         if not os.path.exists(file_path):
             return "File not found", 404
+        
+        # Verify the resolved path is within the upload folder (additional security)
+        upload_folder = os.path.abspath(app.config['UPLOAD_FOLDER'])
+        file_path = os.path.abspath(file_path)
+        if not file_path.startswith(upload_folder):
+            return "Invalid file path", 403
+            
         return send_file(file_path)
     
     @app.route('/templates')

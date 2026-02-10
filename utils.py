@@ -575,21 +575,31 @@ def apply_gradient_effect(img, color1, color2, gradient_type='linear'):
         rgb1 = hex_to_rgb(color1)
         rgb2 = hex_to_rgb(color2)
         
-        # Create gradient (simplified version)
-        for y in range(height):
-            if gradient_type == 'linear':
+        # Create gradient
+        if gradient_type == 'linear':
+            # Linear gradient from top to bottom
+            for y in range(height):
                 ratio = y / height
-            else:  # radial
-                center_x, center_y = width // 2, height // 2
-                max_dist = ((width // 2) ** 2 + (height // 2) ** 2) ** 0.5
-                dist = ((width // 2 - width // 2) ** 2 + (y - center_y) ** 2) ** 0.5
-                ratio = min(dist / max_dist, 1.0)
+                r = int(rgb1[0] + (rgb2[0] - rgb1[0]) * ratio)
+                g = int(rgb1[1] + (rgb2[1] - rgb1[1]) * ratio)
+                b = int(rgb1[2] + (rgb2[2] - rgb1[2]) * ratio)
+                draw.line([(0, y), (width, y)], fill=(r, g, b, 255))
+        else:  # radial
+            # Radial gradient from center
+            center_x, center_y = width // 2, height // 2
+            max_dist = ((width // 2) ** 2 + (height // 2) ** 2) ** 0.5
             
-            r = int(rgb1[0] + (rgb2[0] - rgb1[0]) * ratio)
-            g = int(rgb1[1] + (rgb2[1] - rgb1[1]) * ratio)
-            b = int(rgb1[2] + (rgb2[2] - rgb1[2]) * ratio)
-            
-            draw.line([(0, y), (width, y)], fill=(r, g, b, 255))
+            for y in range(height):
+                for x in range(width):
+                    # Calculate distance from center
+                    dist = ((x - center_x) ** 2 + (y - center_y) ** 2) ** 0.5
+                    ratio = min(dist / max_dist, 1.0)
+                    
+                    r = int(rgb1[0] + (rgb2[0] - rgb1[0]) * ratio)
+                    g = int(rgb1[1] + (rgb2[1] - rgb1[1]) * ratio)
+                    b = int(rgb1[2] + (rgb2[2] - rgb1[2]) * ratio)
+                    
+                    gradient.putpixel((x, y), (r, g, b, 255))
         
         # Get QR code pixels
         pixels = img.load()
@@ -647,6 +657,36 @@ def apply_style_effect(img, style, background_color):
         print(f"Error applying style: {e}")
         return img.convert('RGB')
 
+def get_default_font(size=20):
+    """
+    Get a default font that works across platforms.
+    
+    Args:
+        size: Font size
+        
+    Returns:
+        PIL ImageFont object
+    """
+    from PIL import ImageFont
+    
+    # Try common font paths for different platforms
+    font_paths = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  # Linux
+        "/System/Library/Fonts/Helvetica.ttc",  # macOS
+        "C:\\Windows\\Fonts\\arial.ttf",  # Windows
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",  # Linux alternative
+    ]
+    
+    for font_path in font_paths:
+        try:
+            if os.path.exists(font_path):
+                return ImageFont.truetype(font_path, size)
+        except Exception:
+            continue
+    
+    # Fallback to default font
+    return ImageFont.load_default()
+
 def add_frame_to_qr(img, frame_style, frame_text, frame_color, background_color):
     """
     Add a frame around the QR code.
@@ -662,7 +702,7 @@ def add_frame_to_qr(img, frame_style, frame_text, frame_color, background_color)
         PIL Image object with frame
     """
     try:
-        from PIL import ImageDraw, ImageFont
+        from PIL import ImageDraw
         
         img = img.convert('RGB')
         width, height = img.size
@@ -687,10 +727,7 @@ def add_frame_to_qr(img, frame_style, frame_text, frame_color, background_color)
             
             # Add text
             if frame_text:
-                try:
-                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)
-                except:
-                    font = ImageFont.load_default()
+                font = get_default_font(24)
                 
                 # Calculate text position (centered)
                 bbox = draw.textbbox((0, 0), frame_text, font=font)
@@ -717,10 +754,7 @@ def add_frame_to_qr(img, frame_style, frame_text, frame_color, background_color)
             # Add text at bottom
             if frame_text:
                 draw = ImageDraw.Draw(framed)
-                try:
-                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
-                except:
-                    font = ImageFont.load_default()
+                font = get_default_font(20)
                 
                 # Calculate text position (centered)
                 bbox = draw.textbbox((0, 0), frame_text, font=font)
