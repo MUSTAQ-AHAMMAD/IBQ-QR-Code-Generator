@@ -5,86 +5,78 @@ This script adds the custom_image_path column to the qr_codes table
 if it doesn't already exist. This is needed for users upgrading from
 older versions of the application.
 
+Supports all database backends configured via DATABASE_URL (SQLite,
+PostgreSQL, MySQL, etc.) using SQLAlchemy.
+
 Usage:
     python migrate_db.py
 """
-import os
-import sqlite3
+from flask import Flask
+from sqlalchemy import inspect, text
 from config import config
+from models import db
+
+
+def get_app():
+    """Create a minimal Flask app for database operations."""
+    app = Flask(__name__)
+    app.config.from_object(config['default'])
+    db.init_app(app)
+    return app
+
 
 def migrate_database():
     """Add custom_image_path column to qr_codes table if it doesn't exist."""
-    # Get database URI from config
-    db_uri = config['default'].SQLALCHEMY_DATABASE_URI
-    
-    # Extract database file path from URI
-    if db_uri.startswith('sqlite:///'):
-        db_filename = db_uri.replace('sqlite:///', '')
-    else:
-        print(f"Error: This migration script only supports SQLite databases.")
-        print(f"Current database URI: {db_uri}")
-        return False
-    
-    # Check both possible locations: root directory and instance folder
-    possible_paths = [
-        db_filename,  # Root directory
-        os.path.join('instance', db_filename)  # Instance folder (Flask default)
-    ]
-    
-    db_path = None
-    for path in possible_paths:
-        if os.path.exists(path):
-            db_path = path
-            break
-    
-    # Check if database file exists
-    if db_path is None:
-        print(f"Database file not found in any of these locations:")
-        for path in possible_paths:
-            print(f"  - {path}")
-        print("No migration needed - the database will be created with the correct schema.")
-        return True
-    
-    print(f"Migrating database: {db_path}")
-    
     try:
-        # Connect to database
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        
-        # Check if custom_image_path column exists
-        cursor.execute("PRAGMA table_info(qr_codes)")
-        columns = [column[1] for column in cursor.fetchall()]
-        
-        if 'custom_image_path' in columns:
-            print("✓ Column 'custom_image_path' already exists. No migration needed.")
-            conn.close()
-            return True
-        
-        # Add the missing column
-        print("Adding 'custom_image_path' column to qr_codes table...")
-        cursor.execute("ALTER TABLE qr_codes ADD COLUMN custom_image_path VARCHAR(500)")
-        conn.commit()
-        
-        # Verify the column was added
-        cursor.execute("PRAGMA table_info(qr_codes)")
-        columns = [column[1] for column in cursor.fetchall()]
-        
-        if 'custom_image_path' in columns:
-            print("✓ Migration successful! Column 'custom_image_path' has been added.")
-            conn.close()
-            return True
-        else:
-            print("✗ Migration failed! Column was not added.")
-            conn.close()
-            return False
-            
-    except sqlite3.Error as e:
-        print(f"✗ Database error: {e}")
-        return False
+        app = get_app()
     except Exception as e:
-        print(f"✗ Unexpected error: {e}")
+        print(f"✗ Failed to initialize database connection: {e}")
+        print("Please ensure the required database driver is installed.")
+        print("For PostgreSQL: pip install psycopg2-binary")
+        print("For MySQL: pip install mysqlclient")
         return False
+
+    with app.app_context():
+        db_uri = app.config['SQLALCHEMY_DATABASE_URI']
+        print(f"Database URI: {db_uri}")
+
+        try:
+            # Use SQLAlchemy inspector to check existing columns
+            inspector = inspect(db.engine)
+
+            # Check if qr_codes table exists
+            if 'qr_codes' not in inspector.get_table_names():
+                print("Table 'qr_codes' does not exist yet.")
+                print("No migration needed - the database will be created with the correct schema.")
+                return True
+
+            # Check if custom_image_path column exists
+            columns = [col['name'] for col in inspector.get_columns('qr_codes')]
+
+            if 'custom_image_path' in columns:
+                print("✓ Column 'custom_image_path' already exists. No migration needed.")
+                return True
+
+            # Add the missing column
+            print("Adding 'custom_image_path' column to qr_codes table...")
+            with db.engine.connect() as conn:
+                conn.execute(text("ALTER TABLE qr_codes ADD COLUMN custom_image_path VARCHAR(500)"))
+                conn.commit()
+
+            # Verify the column was added
+            inspector = inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('qr_codes')]
+
+            if 'custom_image_path' in columns:
+                print("✓ Migration successful! Column 'custom_image_path' has been added.")
+                return True
+            else:
+                print("✗ Migration failed! Column was not added.")
+                return False
+
+        except Exception as e:
+            print(f"✗ Database error: {e}")
+            return False
 
 if __name__ == '__main__':
     print("=" * 60)
