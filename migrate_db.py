@@ -1,9 +1,9 @@
 """
-Database migration script to add missing custom_image_path column.
+Database migration script to add missing columns to the qr_codes table.
 
-This script adds the custom_image_path column to the qr_codes table
-if it doesn't already exist. This is needed for users upgrading from
-older versions of the application.
+This script checks for and adds any columns that are defined in the
+QRCode model but missing from the database. This is needed for users
+upgrading from older versions of the application.
 
 Supports all database backends configured via DATABASE_URL (SQLite,
 PostgreSQL, MySQL, etc.) using SQLAlchemy.
@@ -13,8 +13,9 @@ Usage:
 """
 from flask import Flask
 from sqlalchemy import inspect, text
+import re
 from config import config
-from models import db
+from models import db, QRCode
 
 
 def get_app():
@@ -25,8 +26,28 @@ def get_app():
     return app
 
 
+def _get_column_sql_type(column):
+    """Return the SQL type string for a SQLAlchemy model column."""
+    col_type = type(column.type)
+    if col_type.__name__ == 'String':
+        length = getattr(column.type, 'length', None)
+        if length is not None:
+            return f"VARCHAR({length})"
+        return "TEXT"
+    elif col_type.__name__ == 'Text':
+        return "TEXT"
+    elif col_type.__name__ == 'Integer':
+        return "INTEGER"
+    elif col_type.__name__ == 'Boolean':
+        return "BOOLEAN"
+    elif col_type.__name__ == 'DateTime':
+        return "DATETIME"
+    print(f"  ⚠ Unknown column type '{col_type.__name__}' for column '{column.name}', defaulting to TEXT")
+    return "TEXT"
+
+
 def migrate_database():
-    """Add custom_image_path column to qr_codes table if it doesn't exist."""
+    """Add any missing columns to the qr_codes table."""
     try:
         app = get_app()
     except Exception as e:
@@ -50,28 +71,45 @@ def migrate_database():
                 print("No migration needed - the database will be created with the correct schema.")
                 return True
 
-            # Check if custom_image_path column exists
-            columns = [col['name'] for col in inspector.get_columns('qr_codes')]
+            # Get existing columns in the database
+            existing_columns = {col['name'] for col in inspector.get_columns('qr_codes')}
 
-            if 'custom_image_path' in columns:
-                print("✓ Column 'custom_image_path' already exists. No migration needed.")
+            # Get expected columns from the QRCode model
+            model_columns = {col.name: col for col in QRCode.__table__.columns}
+
+            # Find missing columns
+            missing = set(model_columns.keys()) - existing_columns
+
+            if not missing:
+                print("✓ All columns are present. No migration needed.")
                 return True
 
-            # Add the missing column
-            print("Adding 'custom_image_path' column to qr_codes table...")
+            print(f"Found {len(missing)} missing column(s): {', '.join(sorted(missing))}")
+
+            # Add each missing column
             with db.engine.connect() as conn:
-                conn.execute(text("ALTER TABLE qr_codes ADD COLUMN custom_image_path VARCHAR(500)"))
+                for col_name in sorted(missing):
+                    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', col_name):
+                        print(f"  ✗ Skipping invalid column name: '{col_name}'")
+                        continue
+                    col = model_columns[col_name]
+                    sql_type = _get_column_sql_type(col)
+                    print(f"  Adding column '{col_name}' ({sql_type})...")
+                    conn.execute(text(
+                        f"ALTER TABLE qr_codes ADD COLUMN {col_name} {sql_type}"
+                    ))
                 conn.commit()
 
-            # Verify the column was added
+            # Verify all columns were added
             inspector = inspect(db.engine)
-            columns = [col['name'] for col in inspector.get_columns('qr_codes')]
+            existing_columns = {col['name'] for col in inspector.get_columns('qr_codes')}
+            still_missing = set(model_columns.keys()) - existing_columns
 
-            if 'custom_image_path' in columns:
-                print("✓ Migration successful! Column 'custom_image_path' has been added.")
+            if not still_missing:
+                print("✓ Migration successful! All missing columns have been added.")
                 return True
             else:
-                print("✗ Migration failed! Column was not added.")
+                print(f"✗ Migration incomplete. Still missing: {', '.join(sorted(still_missing))}")
                 return False
 
         except Exception as e:
