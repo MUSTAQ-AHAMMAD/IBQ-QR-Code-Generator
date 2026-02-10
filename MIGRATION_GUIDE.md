@@ -156,12 +156,7 @@ The migration script automatically checks all common locations.
 
 1. The migration script reads from your configuration
 2. Make sure your `.env` file is properly configured
-3. For PostgreSQL or other databases, you'll need to manually apply the migration SQL
-
-**Manual migration SQL for PostgreSQL:**
-```sql
-ALTER TABLE qr_codes ADD COLUMN custom_image_path VARCHAR(500);
-```
+3. The migration script supports any database backend (SQLite, PostgreSQL, MySQL, etc.)
 
 ## Need More Help?
 
