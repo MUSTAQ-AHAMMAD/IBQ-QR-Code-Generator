@@ -18,6 +18,7 @@ from sqlalchemy import desc, func
 
 # Constants
 MAX_VCARD_FILENAME_LENGTH = 50
+PUBLIC_TOKEN_LENGTH = 16
 
 def create_app(config_name='default'):
     """Application factory."""
@@ -327,7 +328,7 @@ def create_app(config_name='default'):
                 vcard_data = generate_vcard(contact_data)
                 
                 # Generate public token first
-                public_token = secrets.token_urlsafe(16)
+                public_token = secrets.token_urlsafe(PUBLIC_TOKEN_LENGTH)
                 
                 # Create QR code record
                 qr_code = QRCode(
