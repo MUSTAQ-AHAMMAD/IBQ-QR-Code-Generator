@@ -263,6 +263,15 @@ The application includes API key generation for programmatic access:
 
 ### Common Issues
 
+**Database schema errors (SQLAlchemy OperationalError)**
+- If you see errors like `no such column: qr_codes.custom_image_path`, your database schema is outdated
+- Run the migration script to update your database:
+  ```bash
+  python migrate_db.py
+  ```
+- This will add any missing columns to your existing database
+- The migration script is safe to run multiple times
+
 **Database errors on startup**
 - Delete the existing database file and restart the application
 - Check file permissions in the project directory
