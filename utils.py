@@ -279,3 +279,248 @@ def validate_color(color):
         return True
     except ValueError:
         return False
+
+def generate_url_data(url):
+    """
+    Generate URL QR code data.
+    
+    Args:
+        url: URL string
+        
+    Returns:
+        URL string
+    """
+    return url
+
+def generate_text_data(text):
+    """
+    Generate plain text QR code data.
+    
+    Args:
+        text: Text string
+        
+    Returns:
+        Text string
+    """
+    return text
+
+def generate_email_data(email_data):
+    """
+    Generate email QR code data (mailto format).
+    
+    Args:
+        email_data: Dictionary with email information
+        
+    Returns:
+        mailto URL string
+    """
+    email = email_data.get('email_address', '')
+    subject = email_data.get('email_subject', '')
+    body = email_data.get('email_body', '')
+    
+    mailto = f'mailto:{email}'
+    params = []
+    
+    if subject:
+        params.append(f'subject={subject}')
+    if body:
+        params.append(f'body={body}')
+    
+    if params:
+        mailto += '?' + '&'.join(params)
+    
+    return mailto
+
+def generate_sms_data(sms_data):
+    """
+    Generate SMS QR code data.
+    
+    Args:
+        sms_data: Dictionary with SMS information
+        
+    Returns:
+        SMS URL string
+    """
+    phone = sms_data.get('sms_phone', '')
+    message = sms_data.get('sms_message', '')
+    
+    if message:
+        return f'SMSTO:{phone}:{message}'
+    else:
+        return f'SMSTO:{phone}'
+
+def generate_phone_data(phone):
+    """
+    Generate phone QR code data.
+    
+    Args:
+        phone: Phone number string
+        
+    Returns:
+        Tel URL string
+    """
+    return f'tel:{phone}'
+
+def generate_wifi_data(wifi_data):
+    """
+    Generate WiFi QR code data.
+    
+    Args:
+        wifi_data: Dictionary with WiFi information
+        
+    Returns:
+        WiFi configuration string
+    """
+    ssid = wifi_data.get('wifi_ssid', '')
+    password = wifi_data.get('wifi_password', '')
+    encryption = wifi_data.get('wifi_encryption', 'WPA')
+    hidden = wifi_data.get('wifi_hidden', False)
+    
+    # WIFI:T:WPA;S:mynetwork;P:mypass;H:false;;
+    wifi_string = f'WIFI:T:{encryption};S:{ssid};'
+    
+    if encryption != 'nopass' and password:
+        wifi_string += f'P:{password};'
+    
+    wifi_string += f'H:{"true" if hidden else "false"};;'
+    
+    return wifi_string
+
+def generate_social_data(platform, url):
+    """
+    Generate social media QR code data.
+    
+    Args:
+        platform: Social media platform name
+        url: Profile URL
+        
+    Returns:
+        URL string
+    """
+    return url
+
+def generate_app_store_data(url):
+    """
+    Generate app store QR code data.
+    
+    Args:
+        url: App store URL
+        
+    Returns:
+        URL string
+    """
+    return url
+
+def generate_event_data(event_data):
+    """
+    Generate calendar event QR code data (iCal format).
+    
+    Args:
+        event_data: Dictionary with event information
+        
+    Returns:
+        iCal formatted string
+    """
+    from datetime import datetime
+    
+    title = event_data.get('event_title', '')
+    location = event_data.get('event_location', '')
+    start = event_data.get('event_start', '')
+    end = event_data.get('event_end', '')
+    description = event_data.get('event_description', '')
+    
+    # Basic iCal format
+    ical_lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'BEGIN:VEVENT'
+    ]
+    
+    if title:
+        ical_lines.append(f'SUMMARY:{title}')
+    
+    if location:
+        ical_lines.append(f'LOCATION:{location}')
+    
+    if description:
+        ical_lines.append(f'DESCRIPTION:{description}')
+    
+    if start:
+        # Convert to iCal format (YYYYMMDDTHHMMSS)
+        try:
+            dt = datetime.fromisoformat(start.replace('Z', '+00:00'))
+            ical_lines.append(f'DTSTART:{dt.strftime("%Y%m%dT%H%M%S")}')
+        except:
+            pass
+    
+    if end:
+        try:
+            dt = datetime.fromisoformat(end.replace('Z', '+00:00'))
+            ical_lines.append(f'DTEND:{dt.strftime("%Y%m%dT%H%M%S")}')
+        except:
+            pass
+    
+    ical_lines.extend([
+        'END:VEVENT',
+        'END:VCALENDAR'
+    ])
+    
+    return '\n'.join(ical_lines)
+
+def generate_location_data(location_data):
+    """
+    Generate location/map QR code data (geo URI).
+    
+    Args:
+        location_data: Dictionary with location information
+        
+    Returns:
+        Geo URI string
+    """
+    latitude = location_data.get('location_latitude', '')
+    longitude = location_data.get('location_longitude', '')
+    name = location_data.get('location_name', '')
+    
+    if latitude and longitude:
+        geo_uri = f'geo:{latitude},{longitude}'
+        if name:
+            geo_uri += f'?q={latitude},{longitude}({name})'
+        return geo_uri
+    
+    return ''
+
+def generate_qr_data(qr_type, form_data):
+    """
+    Generate QR code data based on type.
+    
+    Args:
+        qr_type: Type of QR code
+        form_data: Form data dictionary
+        
+    Returns:
+        QR code data string
+    """
+    if qr_type == 'vcard':
+        return generate_vcard(form_data)
+    elif qr_type == 'url':
+        return generate_url_data(form_data.get('url', ''))
+    elif qr_type == 'text':
+        return generate_text_data(form_data.get('text_content', ''))
+    elif qr_type == 'email':
+        return generate_email_data(form_data)
+    elif qr_type == 'sms':
+        return generate_sms_data(form_data)
+    elif qr_type == 'phone':
+        return generate_phone_data(form_data.get('phone_number', ''))
+    elif qr_type == 'wifi':
+        return generate_wifi_data(form_data)
+    elif qr_type in ['facebook', 'twitter', 'instagram', 'linkedin', 'youtube']:
+        return generate_social_data(qr_type, form_data.get('social_url', ''))
+    elif qr_type in ['app_store', 'google_play']:
+        return generate_app_store_data(form_data.get('app_url', ''))
+    elif qr_type == 'event':
+        return generate_event_data(form_data)
+    elif qr_type == 'location':
+        return generate_location_data(form_data)
+    else:
+        return ''
