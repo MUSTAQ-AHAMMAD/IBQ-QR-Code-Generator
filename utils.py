@@ -58,7 +58,7 @@ def generate_vcard(contact_data):
 
 def create_qr_code(data, settings=None, logo_path=None):
     """
-    Create a QR code image.
+    Create a QR code image with advanced styling options.
     
     Args:
         data: Data to encode in the QR code
@@ -110,6 +110,11 @@ def create_qr_code(data, settings=None, logo_path=None):
         img = add_logo_to_qr(img, logo_path)
     elif settings.get('logo_path') and os.path.exists(settings.get('logo_path')):
         img = add_logo_to_qr(img, settings.get('logo_path'))
+    
+    # Add frame if specified
+    frame_style = settings.get('frame_style')
+    if frame_style and frame_style != 'none':
+        img = add_frame_to_qr(img, frame_style, settings.get('frame_text'), settings.get('frame_color', '#000000'), back_color)
     
     return img
 
@@ -539,3 +544,231 @@ def generate_qr_data(qr_type, form_data):
         return generate_location_data(form_data)
     else:
         return ''
+
+def apply_gradient_effect(img, color1, color2, gradient_type='linear'):
+    """
+    Apply a gradient effect to QR code foreground.
+    
+    Args:
+        img: PIL Image object
+        color1: Starting color (hex)
+        color2: Ending color (hex)
+        gradient_type: Type of gradient ('linear' or 'radial')
+        
+    Returns:
+        PIL Image object with gradient
+    """
+    try:
+        from PIL import ImageDraw
+        
+        # Convert to RGBA for manipulation
+        img = img.convert('RGBA')
+        width, height = img.size
+        
+        # Create a gradient overlay
+        gradient = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(gradient)
+        
+        # Parse colors
+        def hex_to_rgb(hex_color):
+            hex_color = hex_color.lstrip('#')
+            return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+        
+        rgb1 = hex_to_rgb(color1)
+        rgb2 = hex_to_rgb(color2)
+        
+        # Create gradient
+        if gradient_type == 'linear':
+            # Linear gradient from top to bottom
+            for y in range(height):
+                ratio = y / height
+                r = int(rgb1[0] + (rgb2[0] - rgb1[0]) * ratio)
+                g = int(rgb1[1] + (rgb2[1] - rgb1[1]) * ratio)
+                b = int(rgb1[2] + (rgb2[2] - rgb1[2]) * ratio)
+                draw.line([(0, y), (width, y)], fill=(r, g, b, 255))
+        else:  # radial
+            # Radial gradient from center
+            center_x, center_y = width // 2, height // 2
+            max_dist = ((width // 2) ** 2 + (height // 2) ** 2) ** 0.5
+            
+            for y in range(height):
+                for x in range(width):
+                    # Calculate distance from center
+                    dist = ((x - center_x) ** 2 + (y - center_y) ** 2) ** 0.5
+                    ratio = min(dist / max_dist, 1.0)
+                    
+                    r = int(rgb1[0] + (rgb2[0] - rgb1[0]) * ratio)
+                    g = int(rgb1[1] + (rgb2[1] - rgb1[1]) * ratio)
+                    b = int(rgb1[2] + (rgb2[2] - rgb1[2]) * ratio)
+                    
+                    gradient.putpixel((x, y), (r, g, b, 255))
+        
+        # Get QR code pixels
+        pixels = img.load()
+        grad_pixels = gradient.load()
+        
+        # Apply gradient only to dark pixels
+        for y in range(height):
+            for x in range(width):
+                if pixels[x, y][0] < 128:  # Dark pixel
+                    pixels[x, y] = grad_pixels[x, y]
+        
+        return img.convert('RGB')
+    except Exception as e:
+        print(f"Error applying gradient: {e}")
+        return img.convert('RGB')
+
+def apply_style_effect(img, style, background_color):
+    """
+    Apply style effects to QR code (rounded, dots, circles).
+    
+    Args:
+        img: PIL Image object
+        style: Style type ('rounded', 'dots', 'circles')
+        background_color: Background color
+        
+    Returns:
+        PIL Image object with style applied
+    """
+    try:
+        from PIL import ImageDraw
+        
+        # For basic implementation, we'll just round corners of the entire QR code
+        if style == 'rounded':
+            img = img.convert('RGBA')
+            width, height = img.size
+            
+            # Create a rounded rectangle mask
+            mask = Image.new('L', (width, height), 0)
+            draw = ImageDraw.Draw(mask)
+            radius = min(width, height) // 20  # 5% radius
+            draw.rounded_rectangle([(0, 0), (width, height)], radius=radius, fill=255)
+            
+            # Apply mask
+            img.putalpha(mask)
+            
+            # Create background
+            bg = Image.new('RGB', (width, height), background_color)
+            bg.paste(img, (0, 0), img)
+            return bg
+        
+        # For dots and circles, return original image
+        # (Full implementation would require pixel-level manipulation)
+        return img.convert('RGB')
+    except Exception as e:
+        print(f"Error applying style: {e}")
+        return img.convert('RGB')
+
+def get_default_font(size=20):
+    """
+    Get a default font that works across platforms.
+    
+    Args:
+        size: Font size
+        
+    Returns:
+        PIL ImageFont object
+    """
+    from PIL import ImageFont
+    
+    # Try common font paths for different platforms
+    font_paths = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  # Linux
+        "/System/Library/Fonts/Helvetica.ttc",  # macOS
+        "C:\\Windows\\Fonts\\arial.ttf",  # Windows
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",  # Linux alternative
+    ]
+    
+    for font_path in font_paths:
+        try:
+            if os.path.exists(font_path):
+                return ImageFont.truetype(font_path, size)
+        except Exception:
+            continue
+    
+    # Fallback to default font
+    return ImageFont.load_default()
+
+def add_frame_to_qr(img, frame_style, frame_text, frame_color, background_color):
+    """
+    Add a frame around the QR code.
+    
+    Args:
+        img: PIL Image object
+        frame_style: Style of frame ('basic', 'banner', 'bottom-text')
+        frame_text: Text to display in frame
+        frame_color: Color of frame and text
+        background_color: Background color
+        
+    Returns:
+        PIL Image object with frame
+    """
+    try:
+        from PIL import ImageDraw
+        
+        img = img.convert('RGB')
+        width, height = img.size
+        
+        if frame_style == 'basic':
+            # Add a simple border frame
+            frame_width = 20
+            new_size = (width + frame_width * 2, height + frame_width * 2)
+            framed = Image.new('RGB', new_size, frame_color)
+            framed.paste(img, (frame_width, frame_width))
+            return framed
+        
+        elif frame_style == 'banner':
+            # Add a banner at the top with text
+            banner_height = 60
+            new_size = (width, height + banner_height)
+            framed = Image.new('RGB', new_size, background_color)
+            
+            # Draw banner
+            draw = ImageDraw.Draw(framed)
+            draw.rectangle([(0, 0), (width, banner_height)], fill=frame_color)
+            
+            # Add text
+            if frame_text:
+                font = get_default_font(24)
+                
+                # Calculate text position (centered)
+                bbox = draw.textbbox((0, 0), frame_text, font=font)
+                text_width = bbox[2] - bbox[0]
+                text_x = (width - text_width) // 2
+                text_y = (banner_height - (bbox[3] - bbox[1])) // 2
+                
+                # Draw text in white
+                draw.text((text_x, text_y), frame_text, fill='white', font=font)
+            
+            # Paste QR code below banner
+            framed.paste(img, (0, banner_height))
+            return framed
+        
+        elif frame_style == 'bottom-text':
+            # Add text at the bottom
+            text_height = 50
+            new_size = (width, height + text_height)
+            framed = Image.new('RGB', new_size, background_color)
+            
+            # Paste QR code at top
+            framed.paste(img, (0, 0))
+            
+            # Add text at bottom
+            if frame_text:
+                draw = ImageDraw.Draw(framed)
+                font = get_default_font(20)
+                
+                # Calculate text position (centered)
+                bbox = draw.textbbox((0, 0), frame_text, font=font)
+                text_width = bbox[2] - bbox[0]
+                text_x = (width - text_width) // 2
+                text_y = height + (text_height - (bbox[3] - bbox[1])) // 2
+                
+                draw.text((text_x, text_y), frame_text, fill=frame_color, font=font)
+            
+            return framed
+        
+        return img
+    except Exception as e:
+        print(f"Error adding frame: {e}")
+        return img
