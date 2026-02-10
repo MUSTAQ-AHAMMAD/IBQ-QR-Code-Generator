@@ -4,7 +4,8 @@ Main Flask application for IBQ QR Code Generator.
 import os
 from flask import Flask, render_template, redirect, url_for, flash, request, send_file, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from werkzeug.urls import url_parse
+from flask_wtf.csrf import generate_csrf
+from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from config import config
 from models import db, User, QRCode, Template, AuditLog
@@ -99,7 +100,8 @@ def create_app(config_name='default'):
         return {
             'app_name': app.config['APP_NAME'],
             'app_version': app.config['APP_VERSION'],
-            'now': datetime.utcnow
+            'now': datetime.utcnow,
+            'csrf_token': generate_csrf
         }
     
     # Error handlers
@@ -175,7 +177,7 @@ def create_app(config_name='default'):
             log_action('login', status='success')
             
             next_page = request.args.get('next')
-            if not next_page or url_parse(next_page).netloc != '':
+            if not next_page or urlparse(next_page).netloc != '':
                 next_page = url_for('dashboard')
             
             flash(f'Welcome back, {user.first_name or user.username}!', 'success')
