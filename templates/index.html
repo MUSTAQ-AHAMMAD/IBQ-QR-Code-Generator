@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IBQ QR Code Generator - Business Card QR Codes</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 IBQ QR Code Generator</h1>
+            <p class="subtitle">Professional Business Card QR Codes</p>
+        </header>
+
+        <div class="main-content">
+            <div class="form-section">
+                <h2>Business Card Information</h2>
+                <form id="qrForm">
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" name="name" required placeholder="John Doe">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="jobTitle">Job Title</label>
+                            <input type="text" id="jobTitle" name="jobTitle" placeholder="Software Engineer">
+                        </div>
+                        <div class="form-group">
+                            <label for="company">Company</label>
+                            <input type="text" id="company" name="company" placeholder="Tech Corp">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="tel" id="phone" name="phone" placeholder="+1-234-567-8900">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" placeholder="john@company.com">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="website">Website</label>
+                        <input type="url" id="website" name="website" placeholder="https://www.company.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <input type="text" id="address" name="address" placeholder="123 Main Street">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="city">City</label>
+                            <input type="text" id="city" name="city" placeholder="New York">
+                        </div>
+                        <div class="form-group">
+                            <label for="state">State/Province</label>
+                            <input type="text" id="state" name="state" placeholder="NY">
+                        </div>
+                        <div class="form-group">
+                            <label for="postalCode">Postal Code</label>
+                            <input type="text" id="postalCode" name="postalCode" placeholder="10001">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="country">Country</label>
+                        <input type="text" id="country" name="country" placeholder="USA">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" name="notes" rows="3" placeholder="Additional information..."></textarea>
+                    </div>
+
+                    <h3>QR Code Settings</h3>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="size">Size (1-50)</label>
+                            <input type="number" id="size" name="size" min="1" max="50" value="10">
+                        </div>
+                        <div class="form-group">
+                            <label for="border">Border (0-10)</label>
+                            <input type="number" id="border" name="border" min="0" max="10" value="4">
+                        </div>
+                        <div class="form-group">
+                            <label for="errorCorrection">Error Correction</label>
+                            <select id="errorCorrection" name="errorCorrection">
+                                <option value="L">Low (7%)</option>
+                                <option value="M">Medium (15%)</option>
+                                <option value="Q">Quartile (25%)</option>
+                                <option value="H" selected>High (30%)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="foregroundColor">Foreground Color</label>
+                            <input type="color" id="foregroundColor" name="foregroundColor" value="#000000">
+                        </div>
+                        <div class="form-group">
+                            <label for="backgroundColor">Background Color</label>
+                            <input type="color" id="backgroundColor" name="backgroundColor" value="#ffffff">
+                        </div>
+                        <div class="form-group">
+                            <label for="outputFormat">Output Format</label>
+                            <select id="outputFormat" name="outputFormat">
+                                <option value="png" selected>PNG</option>
+                                <option value="svg">SVG</option>
+                                <option value="pdf">PDF</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Generate QR Code</button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">Reset Form</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="preview-section">
+                <h2>QR Code Preview</h2>
+                <div id="previewContainer" class="preview-container">
+                    <div class="preview-placeholder">
+                        <svg width="200" height="200" viewBox="0 0 200 200">
+                            <rect width="200" height="200" fill="#f0f0f0"/>
+                            <text x="100" y="100" text-anchor="middle" fill="#999" font-size="16">
+                                Generate a QR code
+                            </text>
+                        </svg>
+                    </div>
+                </div>
+                <div id="downloadSection" class="download-section" style="display: none;">
+                    <button id="downloadBtn" class="btn btn-success">Download QR Code</button>
+                    <p class="file-info" id="fileInfo"></p>
+                </div>
+                <div id="statusMessage" class="status-message"></div>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2024 IBQ QR Code Generator. Built with ❤️ for business professionals.</p>
+            <p><a href="/api/docs" target="_blank">API Documentation</a></p>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
