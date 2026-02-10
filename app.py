@@ -517,6 +517,15 @@ def create_app(config_name='default'):
         log_action('download_qr_code', 'qr_code', qr_code.id, status='success')
         return send_file(qr_code.file_path, as_attachment=True, download_name=qr_code.filename)
     
+    @app.route('/uploads/<filename>')
+    @login_required
+    def uploaded_file(filename):
+        """Serve uploaded QR code files."""
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if not os.path.exists(file_path):
+            return "File not found", 404
+        return send_file(file_path)
+    
     @app.route('/templates')
     @login_required
     def templates():
