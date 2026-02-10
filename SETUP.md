@@ -15,7 +15,20 @@ cp .env.example .env
 # Edit .env and update SECRET_KEY for production
 ```
 
-### 3. Run the Application
+### 3. Initialize the Database
+
+```bash
+python init_db.py
+```
+
+This creates all database tables and sets up the default admin user and templates.
+
+**Optional:** Seed sample data for development:
+```bash
+python seed_db.py
+```
+
+### 4. Run the Application
 
 ```bash
 python app.py
@@ -23,7 +36,7 @@ python app.py
 
 The application will be available at: http://localhost:5000
 
-### 4. Default Login
+### 5. Default Login
 
 - **Username**: admin
 - **Password**: admin123
@@ -90,6 +103,10 @@ IBQ-QR-Code-Generator/
 ├── models.py             # Database models
 ├── forms.py              # WTForms definitions
 ├── utils.py              # QR code utilities
+├── init_db.py            # Database initialization script
+├── seed_db.py            # Database seeding script (sample data)
+├── migrate_db.py         # Database migration script
+├── migrations/           # Flask-Migrate migrations
 ├── requirements.txt      # Python dependencies
 ├── .env.example         # Environment variables template
 ├── templates/           # Jinja2 templates
@@ -209,6 +226,10 @@ server {
 ## Troubleshooting
 
 ### Database Issues
+- Run `python init_db.py` to initialize the database
+- Run `python init_db.py --drop` to recreate the database from scratch
+- Run `python migrate_db.py` if upgrading from an older version
+- Use `flask db upgrade` to apply pending migrations
 - Delete `qrcode_generator.db` and restart
 - Check file permissions
 
