@@ -136,7 +136,8 @@ def create_app(config_name='default'):
     def contact_profile(token):
         """Public contact profile page."""
         qr_code = QRCode.query.filter_by(public_token=token).first_or_404()
-        qr_code.view_count += 1
+        # Atomic update to avoid race conditions
+        QRCode.query.filter_by(id=qr_code.id).update({'view_count': QRCode.view_count + 1})
         db.session.commit()
         return render_template('contact_profile.html', contact=qr_code)
     
@@ -152,7 +153,8 @@ def create_app(config_name='default'):
         response = Response(vcard_content, mimetype='text/vcard')
         response.headers['Content-Disposition'] = f'attachment; filename="{qr_code.contact_name or "contact"}.vcf"'
         
-        qr_code.download_count += 1
+        # Atomic update to avoid race conditions
+        QRCode.query.filter_by(id=qr_code.id).update({'download_count': QRCode.download_count + 1})
         db.session.commit()
         
         return response
