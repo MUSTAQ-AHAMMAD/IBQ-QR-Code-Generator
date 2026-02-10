@@ -100,6 +100,7 @@ class QRCodeGenerateForm(FlaskForm):
     contact_company = StringField('Company', validators=[Optional(), Length(max=100)])
     contact_title = StringField('Job Title', validators=[Optional(), Length(max=100)])
     contact_address = TextAreaField('Address', validators=[Optional(), Length(max=500)])
+    contact_image = FileField('Profile Image', validators=[Optional(), FileAllowed(['png', 'jpg', 'jpeg'], 'Images only!')])
     
     # URL field
     url = StringField('URL', validators=[Optional(), Length(max=2000)])

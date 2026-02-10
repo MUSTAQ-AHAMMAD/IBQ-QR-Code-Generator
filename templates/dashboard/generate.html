@@ -20,7 +20,7 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-body">
-                <form method="POST" enctype="multipart/form-data" novalidate id="qrCodeForm">
+                <form method="POST" novalidate id="qrCodeForm" enctype="multipart/form-data">
                     {{ form.hidden_tag() }}
                     
                     <h5 class="mb-3">Basic Information</h5>
@@ -94,6 +94,17 @@
                         <div class="mb-3">
                             {{ form.contact_address.label(class="form-label") }}
                             {{ form.contact_address(class="form-control", rows="2", placeholder="123 Main St, City, Country") }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.contact_image.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.contact_image(class="form-control", id="contactImage") }}
+                            </div>
+                            <small class="form-text text-muted">Upload your profile image to display in the QR code center (PNG, JPG only, max 5MB)</small>
+                            <div id="imagePreview" class="mt-2" style="display:none;">
+                                <img id="previewImg" src="" alt="Preview" style="max-width: 150px; max-height: 150px; border-radius: 8px; border: 2px solid #ddd;">
+                            </div>
                         </div>
                         <hr class="my-4">
                     </div>
@@ -631,36 +642,31 @@ document.addEventListener('DOMContentLoaded', function() {
         showFieldsForType(this.value);
     });
     
-    // Handle gradient options visibility
-    const gradientEnabled = document.getElementById('gradient_enabled');
-    const gradientOptions = document.getElementById('gradientOptions');
-    
-    if (gradientEnabled) {
-        gradientEnabled.addEventListener('change', function() {
-            gradientOptions.style.display = this.checked ? 'block' : 'none';
+    // Image preview functionality
+    const contactImageInput = document.getElementById('contactImage');
+    if (contactImageInput) {
+        contactImageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB');
+                    e.target.value = '';
+                    document.getElementById('imagePreview').style.display = 'none';
+                    return;
+                }
+                
+                // Preview image
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('previewImg').src = event.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('imagePreview').style.display = 'none';
+            }
         });
-        
-        // Initial state
-        gradientOptions.style.display = gradientEnabled.checked ? 'block' : 'none';
-    }
-    
-    // Handle frame options visibility
-    const frameStyle = document.getElementById('frameStyle');
-    const frameTextContainer = document.getElementById('frameTextContainer');
-    const frameColorContainer = document.getElementById('frameColorContainer');
-    
-    if (frameStyle) {
-        frameStyle.addEventListener('change', function() {
-            const showText = this.value !== 'none';
-            const showColor = this.value !== 'none';
-            frameTextContainer.style.display = showText ? 'block' : 'none';
-            frameColorContainer.style.display = showColor ? 'block' : 'none';
-        });
-        
-        // Initial state
-        const showFrameOptions = frameStyle.value !== 'none';
-        frameTextContainer.style.display = showFrameOptions ? 'block' : 'none';
-        frameColorContainer.style.display = showFrameOptions ? 'block' : 'none';
     }
 });
 </script>

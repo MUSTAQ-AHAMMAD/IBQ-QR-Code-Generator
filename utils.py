@@ -56,13 +56,14 @@ def generate_vcard(contact_data):
     
     return '\n'.join(vcard_lines)
 
-def create_qr_code(data, settings=None):
+def create_qr_code(data, settings=None, logo_path=None):
     """
     Create a QR code image with advanced styling options.
     
     Args:
         data: Data to encode in the QR code
         settings: Dictionary with QR code settings
+        logo_path: Path to logo image to embed in QR code center
         
     Returns:
         PIL Image object
@@ -104,19 +105,11 @@ def create_qr_code(data, settings=None):
     if size:
         img = img.resize((size, size), Image.LANCZOS)
     
-    # Apply gradient if enabled (basic implementation using PIL)
-    if settings.get('gradient_enabled') and settings.get('gradient_color'):
-        img = apply_gradient_effect(img, fill_color, settings.get('gradient_color'), settings.get('gradient_type', 'linear'))
-    
-    # Apply style effects (rounded corners, dots, etc.)
-    qr_style = settings.get('qr_style', 'square')
-    if qr_style in ['rounded', 'dots', 'circles']:
-        img = apply_style_effect(img, qr_style, back_color)
-    
-    # Add logo if provided
-    logo_path = settings.get('logo_path')
+    # Add logo if provided (priority to function parameter)
     if logo_path and os.path.exists(logo_path):
         img = add_logo_to_qr(img, logo_path)
+    elif settings.get('logo_path') and os.path.exists(settings.get('logo_path')):
+        img = add_logo_to_qr(img, settings.get('logo_path'))
     
     # Add frame if specified
     frame_style = settings.get('frame_style')
@@ -184,15 +177,24 @@ def add_logo_to_qr(qr_img, logo_path, logo_size_ratio=0.3):
         qr_width, qr_height = qr_img.size
         logo_size = int(min(qr_width, qr_height) * logo_size_ratio)
         
-        # Resize logo
-        logo = logo.resize((logo_size, logo_size), Image.LANCZOS)
+        # Resize logo maintaining aspect ratio
+        logo.thumbnail((logo_size, logo_size), Image.LANCZOS)
         
-        # Add white background to logo
-        logo_bg = Image.new('RGB', (logo_size + 20, logo_size + 20), 'white')
-        logo_bg.paste(logo, (10, 10))
+        # Create white background with some padding
+        padding = 10
+        logo_bg_size = (logo.size[0] + 2 * padding, logo.size[1] + 2 * padding)
+        logo_bg = Image.new('RGB', logo_bg_size, 'white')
         
-        # Calculate position
-        logo_pos = (
+        # Paste logo on background
+        logo_pos = (padding, padding)
+        if logo.mode == 'RGBA':
+            # Handle transparency
+            logo_bg.paste(logo, logo_pos, logo)
+        else:
+            logo_bg.paste(logo, logo_pos)
+        
+        # Calculate position on QR code
+        qr_pos = (
             (qr_width - logo_bg.size[0]) // 2,
             (qr_height - logo_bg.size[1]) // 2
         )
@@ -201,8 +203,8 @@ def add_logo_to_qr(qr_img, logo_path, logo_size_ratio=0.3):
         if qr_img.mode != 'RGB':
             qr_img = qr_img.convert('RGB')
         
-        # Paste logo
-        qr_img.paste(logo_bg, logo_pos)
+        # Paste logo background onto QR code
+        qr_img.paste(logo_bg, qr_pos)
         
         return qr_img
     except Exception as e:

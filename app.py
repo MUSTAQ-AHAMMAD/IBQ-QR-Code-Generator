@@ -136,6 +136,22 @@ def create_app(config_name='default'):
             db.session.add(log)
             db.session.commit()
     
+    # Helper function for file uploads
+    def allowed_file(filename):
+        """Check if the file extension is allowed."""
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+    
+    def save_uploaded_image(file, prefix='contact_image'):
+        """Save uploaded image with secure filename."""
+        if file and allowed_file(file.filename):
+            # Generate secure filename
+            ext = file.filename.rsplit('.', 1)[1].lower()
+            filename = f"{prefix}_{secrets.token_urlsafe(16)}.{ext}"
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            return filename, filepath
+        return None, None
+    
     # Public routes (no authentication required)
     @app.route('/c/<token>')
     def contact_profile(token):
@@ -353,6 +369,15 @@ def create_app(config_name='default'):
                 # Generate QR data based on type
                 qr_data = generate_qr_data(qr_type, form_data)
                 
+                # Handle custom image upload for vCard
+                custom_image_filename = None
+                custom_image_path = None
+                if qr_type == 'vcard' and form.contact_image.data:
+                    custom_image_filename, custom_image_path = save_uploaded_image(
+                        form.contact_image.data, 
+                        prefix=f'contact_{current_user.id}'
+                    )
+                
                 # Generate public token
                 public_token = secrets.token_urlsafe(PUBLIC_TOKEN_LENGTH)
                 
@@ -414,10 +439,11 @@ def create_app(config_name='default'):
                 # Generate QR code
                 file_format = form.file_format.data or 'png'
                 
+                # For vCard with custom image, we need to add the logo after generation
                 if file_format == 'svg':
                     qr_img = create_qr_code_svg(qr_code_data, settings)
                 else:
-                    qr_img = create_qr_code(qr_code_data, settings)
+                    qr_img = create_qr_code(qr_code_data, settings, logo_path=custom_image_path if qr_type == 'vcard' else None)
                 
                 # Save to file
                 filename = generate_filename(form.name.data, file_format)
@@ -444,6 +470,10 @@ def create_app(config_name='default'):
                 qr_code.frame_color = settings['frame_color']
                 qr_code.eye_style = settings['eye_style']
                 qr_code.data_style = settings['data_style']
+                
+                # Save custom image path if uploaded
+                if custom_image_path:
+                    qr_code.custom_image_path = custom_image_path
                 
                 db.session.add(qr_code)
                 db.session.commit()
