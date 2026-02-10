@@ -97,6 +97,7 @@ class QRCode(db.Model):
     # QR Code data
     qr_data = db.Column(db.Text, nullable=False)
     qr_type = db.Column(db.String(20), default='vcard')  # vcard, url, text, etc.
+    public_token = db.Column(db.String(32), unique=True, index=True)  # Token for public profile URL
     
     # File information
     filename = db.Column(db.String(255))

@@ -34,6 +34,11 @@
                     <a href="{{ url_for('download_qr_code', qr_id=qr_code.id) }}" class="btn btn-success">
                         <i class="bi bi-download me-2"></i>Download
                     </a>
+                    {% if qr_code.public_token %}
+                    <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#shareModal">
+                        <i class="bi bi-share me-2"></i>Share URL
+                    </button>
+                    {% endif %}
                     <a href="{{ url_for('edit_qr_code', qr_id=qr_code.id) }}" class="btn btn-outline-primary">
                         <i class="bi bi-pencil me-2"></i>Edit
                     </a>
@@ -198,4 +203,75 @@
         </div>
     </div>
 </div>
+
+<!-- Share Modal -->
+{% if qr_code.public_token %}
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Share Contact Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Share this URL to let others view the contact profile and add to their contacts:</p>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="shareUrl" 
+                           value="{{ url_for('contact_profile', token=qr_code.public_token, _external=True) }}" readonly>
+                    <button class="btn btn-outline-secondary" type="button" onclick="copyShareUrl()">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                </div>
+                <div id="copySuccess" class="alert alert-success d-none" role="alert">
+                    URL copied to clipboard!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyShareUrl() {
+    const urlInput = document.getElementById('shareUrl');
+    const successAlert = document.getElementById('copySuccess');
+    
+    // Try modern clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(urlInput.value).then(() => {
+            successAlert.classList.remove('d-none');
+            setTimeout(() => {
+                successAlert.classList.add('d-none');
+            }, 3000);
+        }).catch(err => {
+            // Fallback to execCommand
+            fallbackCopy();
+        });
+    } else {
+        // Direct fallback for older browsers
+        fallbackCopy();
+    }
+    
+    function fallbackCopy() {
+        try {
+            urlInput.select();
+            urlInput.setSelectionRange(0, urlInput.value.length);
+            const successful = document.execCommand('copy');
+            if (successful) {
+                successAlert.classList.remove('d-none');
+                setTimeout(() => {
+                    successAlert.classList.add('d-none');
+                }, 3000);
+            } else {
+                alert('Failed to copy URL. Please copy it manually.');
+            }
+        } catch (e) {
+            alert('Failed to copy URL. Please copy it manually.');
+        }
+    }
+}
+</script>
+{% endif %}
 {% endblock %}

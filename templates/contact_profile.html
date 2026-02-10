@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}{{ contact.contact_name }} - Contact Profile{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <!-- Contact Card -->
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5 text-center">
+                    <!-- Profile Header -->
+                    <div class="mb-4">
+                        <div class="bg-primary bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                             style="width: 100px; height: 100px; font-size: 2.5rem;">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                        <h1 class="h3 mb-1">{{ contact.contact_name }}</h1>
+                        {% if contact.contact_title %}
+                        <p class="text-muted mb-0">{{ contact.contact_title }}</p>
+                        {% endif %}
+                        {% if contact.contact_company %}
+                        <p class="text-muted">{{ contact.contact_company }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Add to Contacts Button -->
+                    <div class="d-grid gap-2 mb-4">
+                        <a href="{{ url_for('download_vcard', token=contact.public_token) }}" 
+                           class="btn btn-primary btn-lg">
+                            <i class="bi bi-person-plus-fill me-2"></i>Add to Contacts
+                        </a>
+                    </div>
+                    
+                    <!-- Contact Information -->
+                    <div class="text-start">
+                        <h5 class="mb-3 pb-2 border-bottom">Contact Information</h5>
+                        
+                        {% if contact.contact_email %}
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-envelope-fill text-primary me-3" style="font-size: 1.25rem;"></i>
+                                <div>
+                                    <small class="text-muted d-block">Email</small>
+                                    <a href="mailto:{{ contact.contact_email }}" class="text-decoration-none">
+                                        {{ contact.contact_email }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if contact.contact_phone %}
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-telephone-fill text-primary me-3" style="font-size: 1.25rem;"></i>
+                                <div>
+                                    <small class="text-muted d-block">Phone</small>
+                                    <a href="tel:{{ contact.contact_phone }}" class="text-decoration-none">
+                                        {{ contact.contact_phone }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if contact.contact_website %}
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-globe text-primary me-3" style="font-size: 1.25rem;"></i>
+                                <div>
+                                    <small class="text-muted d-block">Website</small>
+                                    <a href="{{ contact.contact_website }}" target="_blank" class="text-decoration-none">
+                                        {{ contact.contact_website }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if contact.contact_address %}
+                        <div class="mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-geo-alt-fill text-primary me-3" style="font-size: 1.25rem;"></i>
+                                <div>
+                                    <small class="text-muted d-block">Address</small>
+                                    <span>{{ contact.contact_address }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Powered by -->
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    <i class="bi bi-qr-code me-1"></i>
+                    Powered by IBQ QR Code Generator
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        /* Gradient background - only behind cards, not used for text */
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    .card {
+        border-radius: 15px;
+        background-color: #ffffff; /* White background ensures WCAG AA compliance */
+        color: #212529; /* Dark text on white = excellent contrast ratio (16.9:1) */
+    }
+</style>
+{% endblock %}

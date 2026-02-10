@@ -2,7 +2,8 @@
 Main Flask application for IBQ QR Code Generator.
 """
 import os
-from flask import Flask, render_template, redirect, url_for, flash, request, send_file, jsonify
+import secrets
+from flask import Flask, render_template, redirect, url_for, flash, request, send_file, jsonify, Response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import generate_csrf
 from urllib.parse import urlparse
@@ -14,6 +15,10 @@ from forms import (LoginForm, RegistrationForm, QRCodeGenerateForm, QRCodeEditFo
                    PasswordResetRequestForm, PasswordResetForm)
 from utils import generate_vcard, create_qr_code, create_qr_code_svg, save_qr_code, generate_filename, get_qr_code_base64
 from sqlalchemy import desc, func
+
+# Constants
+MAX_VCARD_FILENAME_LENGTH = 50
+PUBLIC_TOKEN_LENGTH = 16
 
 def create_app(config_name='default'):
     """Application factory."""
@@ -129,6 +134,42 @@ def create_app(config_name='default'):
             )
             db.session.add(log)
             db.session.commit()
+    
+    # Public routes (no authentication required)
+    @app.route('/c/<token>')
+    def contact_profile(token):
+        """Public contact profile page."""
+        qr_code = QRCode.query.filter_by(public_token=token).first_or_404()
+        # Atomic update to avoid race conditions
+        QRCode.query.filter_by(id=qr_code.id).update({'view_count': QRCode.view_count + 1})
+        db.session.commit()
+        return render_template('contact_profile.html', contact=qr_code)
+    
+    @app.route('/c/<token>/vcard')
+    def download_vcard(token):
+        """Download vCard file for adding to contacts."""
+        qr_code = QRCode.query.filter_by(public_token=token).first_or_404()
+        
+        # Generate vCard content
+        vcard_content = qr_code.qr_data
+        
+        # Sanitize filename for Content-Disposition header
+        filename = qr_code.contact_name or "contact"
+        # Remove or replace characters that could break the header
+        filename = "".join(c for c in filename if c.isalnum() or c in (' ', '-', '_')).strip()
+        filename = filename.replace(' ', '_')[:MAX_VCARD_FILENAME_LENGTH]
+        if not filename:
+            filename = "contact"
+        
+        # Create response with vCard content
+        response = Response(vcard_content, mimetype='text/vcard')
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}.vcf"'
+        
+        # Atomic update to avoid race conditions
+        QRCode.query.filter_by(id=qr_code.id).update({'download_count': QRCode.download_count + 1})
+        db.session.commit()
+        
+        return response
     
     # Routes
     @app.route('/')
@@ -283,32 +324,13 @@ def create_app(config_name='default'):
                     'contact_address': form.contact_address.data
                 }
                 
-                # Generate vCard data
-                qr_data = generate_vcard(contact_data)
+                # Generate vCard data for storage
+                vcard_data = generate_vcard(contact_data)
                 
-                # QR code settings
-                settings = {
-                    'size': form.size.data or 300,
-                    'foreground_color': form.foreground_color.data or '#000000',
-                    'background_color': form.background_color.data or '#FFFFFF',
-                    'error_correction': form.error_correction.data or 'H',
-                    'border': form.border.data or 4
-                }
+                # Generate public token first
+                public_token = secrets.token_urlsafe(PUBLIC_TOKEN_LENGTH)
                 
-                # Generate QR code
-                file_format = form.file_format.data or 'png'
-                
-                if file_format == 'svg':
-                    qr_img = create_qr_code_svg(qr_data, settings)
-                else:
-                    qr_img = create_qr_code(qr_data, settings)
-                
-                # Save to file
-                filename = generate_filename(form.name.data, file_format)
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file_size = save_qr_code(qr_img, file_path, file_format)
-                
-                # Save to database
+                # Create QR code record
                 qr_code = QRCode(
                     user_id=current_user.id,
                     name=form.name.data,
@@ -321,19 +343,47 @@ def create_app(config_name='default'):
                     contact_company=form.contact_company.data,
                     contact_title=form.contact_title.data,
                     contact_address=form.contact_address.data,
-                    qr_data=qr_data,
+                    qr_data=vcard_data,
                     qr_type='vcard',
-                    filename=filename,
-                    file_path=file_path,
-                    file_format=file_format,
-                    file_size=file_size,
-                    size=settings['size'],
-                    foreground_color=settings['foreground_color'],
-                    background_color=settings['background_color'],
-                    error_correction=settings['error_correction'],
-                    border=settings['border'],
+                    public_token=public_token,
                     template_id=form.template_id.data if form.template_id.data else None
                 )
+                
+                # Generate profile URL for QR code
+                profile_url = url_for('contact_profile', token=public_token, _external=True)
+                
+                # QR code settings
+                settings = {
+                    'size': form.size.data or 300,
+                    'foreground_color': form.foreground_color.data or '#000000',
+                    'background_color': form.background_color.data or '#FFFFFF',
+                    'error_correction': form.error_correction.data or 'H',
+                    'border': form.border.data or 4
+                }
+                
+                # Generate QR code with profile URL
+                file_format = form.file_format.data or 'png'
+                
+                if file_format == 'svg':
+                    qr_img = create_qr_code_svg(profile_url, settings)
+                else:
+                    qr_img = create_qr_code(profile_url, settings)
+                
+                # Save to file
+                filename = generate_filename(form.name.data, file_format)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file_size = save_qr_code(qr_img, file_path, file_format)
+                
+                # Update QR code record with file information
+                qr_code.filename = filename
+                qr_code.file_path = file_path
+                qr_code.file_format = file_format
+                qr_code.file_size = file_size
+                qr_code.size = settings['size']
+                qr_code.foreground_color = settings['foreground_color']
+                qr_code.background_color = settings['background_color']
+                qr_code.error_correction = settings['error_correction']
+                qr_code.border = settings['border']
                 
                 db.session.add(qr_code)
                 db.session.commit()
