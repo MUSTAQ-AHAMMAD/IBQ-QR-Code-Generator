@@ -60,7 +60,7 @@ class PasswordResetForm(FlaskForm):
     submit = SubmitField('Reset Password')
 
 class QRCodeGenerateForm(FlaskForm):
-    """QR Code generation form for business cards."""
+    """QR Code generation form for all types."""
     name = StringField('QR Code Name', validators=[DataRequired(), Length(max=100)])
     description = TextAreaField('Description', validators=[Optional(), Length(max=500)])
     category = SelectField('Category', choices=[
@@ -71,14 +71,80 @@ class QRCodeGenerateForm(FlaskForm):
         ('other', 'Other')
     ], validators=[Optional()])
     
-    # Business card fields
+    # QR Code Type Selection
+    qr_type = SelectField('QR Code Type', choices=[
+        ('vcard', 'Business Card / vCard'),
+        ('url', 'Website URL'),
+        ('text', 'Plain Text'),
+        ('email', 'Email'),
+        ('sms', 'SMS / Text Message'),
+        ('phone', 'Phone Number'),
+        ('wifi', 'WiFi Network'),
+        ('facebook', 'Facebook Profile'),
+        ('twitter', 'Twitter Profile'),
+        ('instagram', 'Instagram Profile'),
+        ('linkedin', 'LinkedIn Profile'),
+        ('youtube', 'YouTube Channel'),
+        ('app_store', 'App Store Link'),
+        ('google_play', 'Google Play Store'),
+        ('event', 'Calendar Event'),
+        ('location', 'Location / Map')
+    ], default='vcard', validators=[DataRequired()])
+    
+    # Business card fields (vcard)
     contact_name = StringField('Contact Name', validators=[Optional(), Length(max=100)])
     contact_email = StringField('Email', validators=[Optional(), Email(), Length(max=120)])
     contact_phone = StringField('Phone', validators=[Optional(), Length(max=20)])
-    contact_website = StringField('Website', validators=[Optional(), URL(), Length(max=200)])
+    contact_website = StringField('Website', validators=[Optional(), URL(require_tld=False), Length(max=200)])
     contact_company = StringField('Company', validators=[Optional(), Length(max=100)])
     contact_title = StringField('Job Title', validators=[Optional(), Length(max=100)])
     contact_address = TextAreaField('Address', validators=[Optional(), Length(max=500)])
+    
+    # URL field
+    url = StringField('URL', validators=[Optional(), Length(max=2000)])
+    
+    # Text field
+    text_content = TextAreaField('Text Content', validators=[Optional(), Length(max=2000)])
+    
+    # Email fields
+    email_address = StringField('Email Address', validators=[Optional(), Email(), Length(max=120)])
+    email_subject = StringField('Email Subject', validators=[Optional(), Length(max=200)])
+    email_body = TextAreaField('Email Body', validators=[Optional(), Length(max=1000)])
+    
+    # SMS fields
+    sms_phone = StringField('Phone Number', validators=[Optional(), Length(max=20)])
+    sms_message = TextAreaField('Message', validators=[Optional(), Length(max=500)])
+    
+    # Phone field
+    phone_number = StringField('Phone Number', validators=[Optional(), Length(max=20)])
+    
+    # WiFi fields
+    wifi_ssid = StringField('Network Name (SSID)', validators=[Optional(), Length(max=100)])
+    wifi_password = StringField('Password', validators=[Optional(), Length(max=100)])
+    wifi_encryption = SelectField('Security Type', choices=[
+        ('WPA', 'WPA/WPA2'),
+        ('WEP', 'WEP'),
+        ('nopass', 'No Password')
+    ], validators=[Optional()])
+    wifi_hidden = BooleanField('Hidden Network')
+    
+    # Social Media fields
+    social_url = StringField('Profile URL', validators=[Optional(), Length(max=500)])
+    
+    # App Store fields
+    app_url = StringField('App Store URL', validators=[Optional(), Length(max=500)])
+    
+    # Event fields
+    event_title = StringField('Event Title', validators=[Optional(), Length(max=200)])
+    event_location = StringField('Event Location', validators=[Optional(), Length(max=200)])
+    event_start = StringField('Start Date/Time', validators=[Optional()])
+    event_end = StringField('End Date/Time', validators=[Optional()])
+    event_description = TextAreaField('Event Description', validators=[Optional(), Length(max=1000)])
+    
+    # Location fields
+    location_latitude = StringField('Latitude', validators=[Optional()])
+    location_longitude = StringField('Longitude', validators=[Optional()])
+    location_name = StringField('Location Name', validators=[Optional(), Length(max=200)])
     
     # QR Code customization
     size = IntegerField('QR Code Size (px)', validators=[Optional()], default=300)

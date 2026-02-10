@@ -12,7 +12,7 @@
             </ol>
         </nav>
         <h2>Generate QR Code</h2>
-        <p class="text-muted">Create a QR code for your business card</p>
+        <p class="text-muted">Create a QR code for various purposes</p>
     </div>
 </div>
 
@@ -20,7 +20,7 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-body">
-                <form method="POST" novalidate>
+                <form method="POST" novalidate id="qrCodeForm">
                     {{ form.hidden_tag() }}
                     
                     <h5 class="mb-3">Basic Information</h5>
@@ -40,54 +40,263 @@
                         {{ form.description(class="form-control", rows="2", placeholder="Optional description") }}
                     </div>
                     
-                    <div class="mb-3">
-                        {{ form.category.label(class="form-label") }}
-                        {{ form.category(class="form-select") }}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.qr_type.label(class="form-label") }}
+                            {{ form.qr_type(class="form-select", id="qrType") }}
+                            <small class="form-text text-muted">Select the type of QR code to generate</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.category.label(class="form-label") }}
+                            {{ form.category(class="form-select") }}
+                        </div>
                     </div>
                     
                     <hr class="my-4">
                     
-                    <h5 class="mb-3">Contact Information</h5>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form.contact_name.label(class="form-label") }}
-                            {{ form.contact_name(class="form-control", placeholder="John Doe") }}
+                    <!-- Business Card / vCard Fields -->
+                    <div id="fields-vcard" class="qr-type-fields">
+                        <h5 class="mb-3">Contact Information</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.contact_name.label(class="form-label") }}
+                                {{ form.contact_name(class="form-control", placeholder="John Doe") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.contact_title.label(class="form-label") }}
+                                {{ form.contact_title(class="form-control", placeholder="CEO") }}
+                            </div>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            {{ form.contact_title.label(class="form-label") }}
-                            {{ form.contact_title(class="form-control", placeholder="CEO") }}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.contact_email.label(class="form-label") }}
+                                {{ form.contact_email(class="form-control", placeholder="john@example.com") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.contact_phone.label(class="form-label") }}
+                                {{ form.contact_phone(class="form-control", placeholder="+1234567890") }}
+                            </div>
                         </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.contact_company.label(class="form-label") }}
+                                {{ form.contact_company(class="form-control", placeholder="Company Name") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.contact_website.label(class="form-label") }}
+                                {{ form.contact_website(class="form-control", placeholder="https://example.com") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.contact_address.label(class="form-label") }}
+                            {{ form.contact_address(class="form-control", rows="2", placeholder="123 Main St, City, Country") }}
+                        </div>
+                        <hr class="my-4">
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form.contact_email.label(class="form-label") }}
-                            {{ form.contact_email(class="form-control", placeholder="john@example.com") }}
+                    <!-- URL Fields -->
+                    <div id="fields-url" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">Website URL</h5>
+                        <div class="mb-3">
+                            {{ form.url.label(class="form-label") }}
+                            {{ form.url(class="form-control", placeholder="https://example.com") }}
+                            <small class="form-text text-muted">Enter the full URL including https://</small>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            {{ form.contact_phone.label(class="form-label") }}
-                            {{ form.contact_phone(class="form-control", placeholder="+1234567890") }}
-                        </div>
+                        <hr class="my-4">
                     </div>
                     
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form.contact_company.label(class="form-label") }}
-                            {{ form.contact_company(class="form-control", placeholder="Company Name") }}
+                    <!-- Text Fields -->
+                    <div id="fields-text" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">Plain Text</h5>
+                        <div class="mb-3">
+                            {{ form.text_content.label(class="form-label") }}
+                            {{ form.text_content(class="form-control", rows="4", placeholder="Enter your text here...") }}
+                            <small class="form-text text-muted">Maximum 2000 characters</small>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            {{ form.contact_website.label(class="form-label") }}
-                            {{ form.contact_website(class="form-control", placeholder="https://example.com") }}
-                        </div>
+                        <hr class="my-4">
                     </div>
                     
-                    <div class="mb-3">
-                        {{ form.contact_address.label(class="form-label") }}
-                        {{ form.contact_address(class="form-control", rows="2", placeholder="123 Main St, City, Country") }}
+                    <!-- Email Fields -->
+                    <div id="fields-email" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">Email Information</h5>
+                        <div class="mb-3">
+                            {{ form.email_address.label(class="form-label") }}
+                            {{ form.email_address(class="form-control", placeholder="recipient@example.com") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.email_subject.label(class="form-label") }}
+                            {{ form.email_subject(class="form-control", placeholder="Subject line") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.email_body.label(class="form-label") }}
+                            {{ form.email_body(class="form-control", rows="3", placeholder="Email message...") }}
+                        </div>
+                        <hr class="my-4">
                     </div>
                     
-                    <hr class="my-4">
+                    <!-- SMS Fields -->
+                    <div id="fields-sms" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">SMS / Text Message</h5>
+                        <div class="mb-3">
+                            {{ form.sms_phone.label(class="form-label") }}
+                            {{ form.sms_phone(class="form-control", placeholder="+1234567890") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.sms_message.label(class="form-label") }}
+                            {{ form.sms_message(class="form-control", rows="3", placeholder="Pre-filled message...") }}
+                        </div>
+                        <hr class="my-4">
+                    </div>
+                    
+                    <!-- Phone Fields -->
+                    <div id="fields-phone" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">Phone Number</h5>
+                        <div class="mb-3">
+                            {{ form.phone_number.label(class="form-label") }}
+                            {{ form.phone_number(class="form-control", placeholder="+1234567890") }}
+                            <small class="form-text text-muted">Include country code (e.g., +1 for US)</small>
+                        </div>
+                        <hr class="my-4">
+                    </div>
+                    
+                    <!-- WiFi Fields -->
+                    <div id="fields-wifi" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">WiFi Network</h5>
+                        <div class="mb-3">
+                            {{ form.wifi_ssid.label(class="form-label") }}
+                            {{ form.wifi_ssid(class="form-control", placeholder="Network Name") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.wifi_password.label(class="form-label") }}
+                            {{ form.wifi_password(class="form-control", placeholder="Network Password") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.wifi_encryption.label(class="form-label") }}
+                            {{ form.wifi_encryption(class="form-select") }}
+                        </div>
+                        <div class="mb-3 form-check">
+                            {{ form.wifi_hidden(class="form-check-input") }}
+                            {{ form.wifi_hidden.label(class="form-check-label") }}
+                        </div>
+                        <hr class="my-4">
+                    </div>
+                    
+                    <!-- Social Media Fields -->
+                    <div id="fields-facebook" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">Facebook Profile</h5>
+                        <div class="mb-3">
+                            {{ form.social_url.label(class="form-label", text="Facebook Profile URL") }}
+                            {{ form.social_url(class="form-control", placeholder="https://facebook.com/yourprofile") }}
+                        </div>
+                        <hr class="my-4">
+                    </div>
+                    
+                    <div id="fields-twitter" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">Twitter Profile</h5>
+                        <div class="mb-3">
+                            {{ form.social_url.label(class="form-label", text="Twitter Profile URL") }}
+                            {{ form.social_url(class="form-control", placeholder="https://twitter.com/yourhandle") }}
+                        </div>
+                        <hr class="my-4">
+                    </div>
+                    
+                    <div id="fields-instagram" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">Instagram Profile</h5>
+                        <div class="mb-3">
+                            {{ form.social_url.label(class="form-label", text="Instagram Profile URL") }}
+                            {{ form.social_url(class="form-control", placeholder="https://instagram.com/yourhandle") }}
+                        </div>
+                        <hr class="my-4">
+                    </div>
+                    
+                    <div id="fields-linkedin" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">LinkedIn Profile</h5>
+                        <div class="mb-3">
+                            {{ form.social_url.label(class="form-label", text="LinkedIn Profile URL") }}
+                            {{ form.social_url(class="form-control", placeholder="https://linkedin.com/in/yourprofile") }}
+                        </div>
+                        <hr class="my-4">
+                    </div>
+                    
+                    <div id="fields-youtube" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">YouTube Channel</h5>
+                        <div class="mb-3">
+                            {{ form.social_url.label(class="form-label", text="YouTube Channel URL") }}
+                            {{ form.social_url(class="form-control", placeholder="https://youtube.com/c/yourchannel") }}
+                        </div>
+                        <hr class="my-4">
+                    </div>
+                    
+                    <!-- App Store Fields -->
+                    <div id="fields-app_store" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">App Store Link</h5>
+                        <div class="mb-3">
+                            {{ form.app_url.label(class="form-label", text="App Store URL") }}
+                            {{ form.app_url(class="form-control", placeholder="https://apps.apple.com/app/...") }}
+                        </div>
+                        <hr class="my-4">
+                    </div>
+                    
+                    <div id="fields-google_play" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">Google Play Store Link</h5>
+                        <div class="mb-3">
+                            {{ form.app_url.label(class="form-label", text="Google Play URL") }}
+                            {{ form.app_url(class="form-control", placeholder="https://play.google.com/store/apps/details?id=...") }}
+                        </div>
+                        <hr class="my-4">
+                    </div>
+                    
+                    <!-- Event Fields -->
+                    <div id="fields-event" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">Calendar Event</h5>
+                        <div class="mb-3">
+                            {{ form.event_title.label(class="form-label") }}
+                            {{ form.event_title(class="form-control", placeholder="Event name") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.event_location.label(class="form-label") }}
+                            {{ form.event_location(class="form-control", placeholder="Event location") }}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.event_start.label(class="form-label") }}
+                                {{ form.event_start(class="form-control", type="datetime-local") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.event_end.label(class="form-label") }}
+                                {{ form.event_end(class="form-control", type="datetime-local") }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.event_description.label(class="form-label") }}
+                            {{ form.event_description(class="form-control", rows="3", placeholder="Event description") }}
+                        </div>
+                        <hr class="my-4">
+                    </div>
+                    
+                    <!-- Location Fields -->
+                    <div id="fields-location" class="qr-type-fields" style="display:none;">
+                        <h5 class="mb-3">Location / Map</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.location_latitude.label(class="form-label") }}
+                                {{ form.location_latitude(class="form-control", placeholder="e.g., 40.7128") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.location_longitude.label(class="form-label") }}
+                                {{ form.location_longitude(class="form-control", placeholder="e.g., -74.0060") }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.location_name.label(class="form-label") }}
+                            {{ form.location_name(class="form-control", placeholder="Location name (optional)") }}
+                        </div>
+                        <hr class="my-4">
+                    </div>
                     
                     <h5 class="mb-3">Customization</h5>
                     
@@ -151,29 +360,195 @@
     <div class="col-lg-4">
         <div class="card sticky-top" style="top: 20px;">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Tips</h5>
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>QR Code Types</h5>
             </div>
             <div class="card-body">
-                <h6>Business Card QR Codes</h6>
-                <p class="small">Your QR code will be generated in vCard format, which can be easily scanned by smartphones to save contact information.</p>
-                
-                <h6 class="mt-3">Error Correction</h6>
-                <ul class="small mb-0">
-                    <li><strong>Low (7%):</strong> Smallest size, minimal damage tolerance</li>
-                    <li><strong>Medium (15%):</strong> Balanced option</li>
-                    <li><strong>Quartile (25%):</strong> Good for print</li>
-                    <li><strong>High (30%):</strong> Best for logos, highest damage tolerance</li>
-                </ul>
-                
-                <h6 class="mt-3">Best Practices</h6>
-                <ul class="small mb-0">
-                    <li>Use high error correction for codes with logos</li>
-                    <li>Ensure good contrast between colors</li>
-                    <li>Test your QR code after generation</li>
-                    <li>Keep the design simple for better scanning</li>
-                </ul>
+                <div id="tips-content">
+                    <h6>Select a Type</h6>
+                    <p class="small">Choose a QR code type from the dropdown to see specific information and tips for that type.</p>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const qrTypeSelect = document.getElementById('qrType');
+    const allFields = document.querySelectorAll('.qr-type-fields');
+    
+    // Tips for each QR code type
+    const tips = {
+        'vcard': `
+            <h6>Business Card QR Codes</h6>
+            <p class="small">Your QR code will be generated in vCard format, which can be easily scanned by smartphones to save contact information.</p>
+            <ul class="small mb-0">
+                <li>Fill in as much contact information as possible</li>
+                <li>Include your photo URL for a complete profile</li>
+                <li>Test the QR code after generation</li>
+            </ul>
+        `,
+        'url': `
+            <h6>Website URL QR Codes</h6>
+            <p class="small">Direct users to your website or any URL by scanning the QR code.</p>
+            <ul class="small mb-0">
+                <li>Always include https:// in the URL</li>
+                <li>Shorter URLs work better</li>
+                <li>Test the link before generating</li>
+            </ul>
+        `,
+        'text': `
+            <h6>Plain Text QR Codes</h6>
+            <p class="small">Encode any text information into a QR code.</p>
+            <ul class="small mb-0">
+                <li>Maximum 2000 characters recommended</li>
+                <li>Shorter text = smaller, easier to scan QR codes</li>
+                <li>Great for instructions, messages, or codes</li>
+            </ul>
+        `,
+        'email': `
+            <h6>Email QR Codes</h6>
+            <p class="small">Create a QR code that opens an email client with pre-filled information.</p>
+            <ul class="small mb-0">
+                <li>Subject and body are optional</li>
+                <li>Great for contact forms and support</li>
+                <li>Works with all email clients</li>
+            </ul>
+        `,
+        'sms': `
+            <h6>SMS / Text Message QR Codes</h6>
+            <p class="small">Create a QR code that opens SMS with a pre-filled message.</p>
+            <ul class="small mb-0">
+                <li>Include country code in phone number</li>
+                <li>Message is optional</li>
+                <li>Great for quick responses</li>
+            </ul>
+        `,
+        'phone': `
+            <h6>Phone Number QR Codes</h6>
+            <p class="small">Create a QR code that initiates a phone call.</p>
+            <ul class="small mb-0">
+                <li>Always include country code</li>
+                <li>Format: +1234567890</li>
+                <li>Perfect for business cards</li>
+            </ul>
+        `,
+        'wifi': `
+            <h6>WiFi Network QR Codes</h6>
+            <p class="small">Allow users to connect to WiFi by scanning a QR code.</p>
+            <ul class="small mb-0">
+                <li>Enter exact network name (SSID)</li>
+                <li>Choose correct security type</li>
+                <li>Great for guests and public spaces</li>
+            </ul>
+        `,
+        'facebook': `
+            <h6>Facebook Profile QR Codes</h6>
+            <p class="small">Link to your Facebook profile or page.</p>
+            <ul class="small mb-0">
+                <li>Use your full Facebook URL</li>
+                <li>Works for profiles and pages</li>
+                <li>Great for marketing materials</li>
+            </ul>
+        `,
+        'twitter': `
+            <h6>Twitter Profile QR Codes</h6>
+            <p class="small">Link to your Twitter profile.</p>
+            <ul class="small mb-0">
+                <li>Use your full Twitter URL</li>
+                <li>Perfect for business cards</li>
+                <li>Increase your followers</li>
+            </ul>
+        `,
+        'instagram': `
+            <h6>Instagram Profile QR Codes</h6>
+            <p class="small">Link to your Instagram profile.</p>
+            <ul class="small mb-0">
+                <li>Use your full Instagram URL</li>
+                <li>Great for promotional materials</li>
+                <li>Boost your followers</li>
+            </ul>
+        `,
+        'linkedin': `
+            <h6>LinkedIn Profile QR Codes</h6>
+            <p class="small">Link to your LinkedIn profile.</p>
+            <ul class="small mb-0">
+                <li>Use your full LinkedIn URL</li>
+                <li>Perfect for networking events</li>
+                <li>Professional connections</li>
+            </ul>
+        `,
+        'youtube': `
+            <h6>YouTube Channel QR Codes</h6>
+            <p class="small">Link to your YouTube channel or video.</p>
+            <ul class="small mb-0">
+                <li>Use your full YouTube URL</li>
+                <li>Works for channels and videos</li>
+                <li>Great for video marketing</li>
+            </ul>
+        `,
+        'app_store': `
+            <h6>App Store Link QR Codes</h6>
+            <p class="small">Direct users to your app on the Apple App Store.</p>
+            <ul class="small mb-0">
+                <li>Use the full App Store URL</li>
+                <li>Perfect for app marketing</li>
+                <li>Increase downloads</li>
+            </ul>
+        `,
+        'google_play': `
+            <h6>Google Play Store QR Codes</h6>
+            <p class="small">Direct users to your app on Google Play.</p>
+            <ul class="small mb-0">
+                <li>Use the full Play Store URL</li>
+                <li>Great for Android users</li>
+                <li>Boost app installs</li>
+            </ul>
+        `,
+        'event': `
+            <h6>Calendar Event QR Codes</h6>
+            <p class="small">Add events to calendars by scanning.</p>
+            <ul class="small mb-0">
+                <li>Include all event details</li>
+                <li>Use proper date/time format</li>
+                <li>Perfect for invitations</li>
+            </ul>
+        `,
+        'location': `
+            <h6>Location / Map QR Codes</h6>
+            <p class="small">Direct users to a specific location on maps.</p>
+            <ul class="small mb-0">
+                <li>Use accurate coordinates</li>
+                <li>Add location name for context</li>
+                <li>Great for directions</li>
+            </ul>
+        `
+    };
+    
+    function showFieldsForType(type) {
+        // Hide all fields
+        allFields.forEach(field => field.style.display = 'none');
+        
+        // Show relevant fields
+        const fieldsToShow = document.getElementById('fields-' + type);
+        if (fieldsToShow) {
+            fieldsToShow.style.display = 'block';
+        }
+        
+        // Update tips
+        const tipsContent = document.getElementById('tips-content');
+        if (tips[type]) {
+            tipsContent.innerHTML = tips[type];
+        }
+    }
+    
+    // Initial display
+    showFieldsForType(qrTypeSelect.value);
+    
+    // On change event
+    qrTypeSelect.addEventListener('change', function() {
+        showFieldsForType(this.value);
+    });
+});
+</script>
 {% endblock %}

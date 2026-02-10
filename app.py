@@ -13,7 +13,8 @@ from models import db, User, QRCode, Template, AuditLog
 from forms import (LoginForm, RegistrationForm, QRCodeGenerateForm, QRCodeEditForm,
                    TemplateForm, ProfileForm, ChangePasswordForm, AccountSettingsForm,
                    PasswordResetRequestForm, PasswordResetForm)
-from utils import generate_vcard, create_qr_code, create_qr_code_svg, save_qr_code, generate_filename, get_qr_code_base64
+from utils import (generate_vcard, create_qr_code, create_qr_code_svg, save_qr_code, 
+                   generate_filename, get_qr_code_base64, generate_qr_data)
 from sqlalchemy import desc, func
 
 # Constants
@@ -313,21 +314,46 @@ def create_app(config_name='default'):
         
         if form.validate_on_submit():
             try:
-                # Prepare contact data
-                contact_data = {
+                # Get QR code type
+                qr_type = form.qr_type.data
+                
+                # Prepare form data dictionary
+                form_data = {
                     'contact_name': form.contact_name.data,
                     'contact_email': form.contact_email.data,
                     'contact_phone': form.contact_phone.data,
                     'contact_website': form.contact_website.data,
                     'contact_company': form.contact_company.data,
                     'contact_title': form.contact_title.data,
-                    'contact_address': form.contact_address.data
+                    'contact_address': form.contact_address.data,
+                    'url': form.url.data,
+                    'text_content': form.text_content.data,
+                    'email_address': form.email_address.data,
+                    'email_subject': form.email_subject.data,
+                    'email_body': form.email_body.data,
+                    'sms_phone': form.sms_phone.data,
+                    'sms_message': form.sms_message.data,
+                    'phone_number': form.phone_number.data,
+                    'wifi_ssid': form.wifi_ssid.data,
+                    'wifi_password': form.wifi_password.data,
+                    'wifi_encryption': form.wifi_encryption.data,
+                    'wifi_hidden': form.wifi_hidden.data,
+                    'social_url': form.social_url.data,
+                    'app_url': form.app_url.data,
+                    'event_title': form.event_title.data,
+                    'event_location': form.event_location.data,
+                    'event_start': form.event_start.data,
+                    'event_end': form.event_end.data,
+                    'event_description': form.event_description.data,
+                    'location_latitude': form.location_latitude.data,
+                    'location_longitude': form.location_longitude.data,
+                    'location_name': form.location_name.data
                 }
                 
-                # Generate vCard data for storage
-                vcard_data = generate_vcard(contact_data)
+                # Generate QR data based on type
+                qr_data = generate_qr_data(qr_type, form_data)
                 
-                # Generate public token first
+                # Generate public token
                 public_token = secrets.token_urlsafe(PUBLIC_TOKEN_LENGTH)
                 
                 # Create QR code record
@@ -343,14 +369,17 @@ def create_app(config_name='default'):
                     contact_company=form.contact_company.data,
                     contact_title=form.contact_title.data,
                     contact_address=form.contact_address.data,
-                    qr_data=vcard_data,
-                    qr_type='vcard',
+                    qr_data=qr_data,
+                    qr_type=qr_type,
                     public_token=public_token,
                     template_id=form.template_id.data if form.template_id.data else None
                 )
                 
-                # Generate profile URL for QR code
-                profile_url = url_for('contact_profile', token=public_token, _external=True)
+                # For vcard, generate profile URL; for others, use direct data
+                if qr_type == 'vcard':
+                    qr_code_data = url_for('contact_profile', token=public_token, _external=True)
+                else:
+                    qr_code_data = qr_data
                 
                 # QR code settings
                 settings = {
@@ -361,13 +390,13 @@ def create_app(config_name='default'):
                     'border': form.border.data or 4
                 }
                 
-                # Generate QR code with profile URL
+                # Generate QR code
                 file_format = form.file_format.data or 'png'
                 
                 if file_format == 'svg':
-                    qr_img = create_qr_code_svg(profile_url, settings)
+                    qr_img = create_qr_code_svg(qr_code_data, settings)
                 else:
-                    qr_img = create_qr_code(profile_url, settings)
+                    qr_img = create_qr_code(qr_code_data, settings)
                 
                 # Save to file
                 filename = generate_filename(form.name.data, file_format)
