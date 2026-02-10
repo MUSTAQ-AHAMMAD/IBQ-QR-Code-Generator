@@ -314,6 +314,8 @@ def generate_email_data(email_data):
     Returns:
         mailto URL string
     """
+    from urllib.parse import quote
+    
     email = email_data.get('email_address', '')
     subject = email_data.get('email_subject', '')
     body = email_data.get('email_body', '')
@@ -322,9 +324,9 @@ def generate_email_data(email_data):
     params = []
     
     if subject:
-        params.append(f'subject={subject}')
+        params.append(f'subject={quote(subject)}')
     if body:
-        params.append(f'body={body}')
+        params.append(f'body={quote(body)}')
     
     if params:
         mailto += '?' + '&'.join(params)
@@ -450,14 +452,14 @@ def generate_event_data(event_data):
         try:
             dt = datetime.fromisoformat(start.replace('Z', '+00:00'))
             ical_lines.append(f'DTSTART:{dt.strftime("%Y%m%dT%H%M%S")}')
-        except:
+        except (ValueError, AttributeError):
             pass
     
     if end:
         try:
             dt = datetime.fromisoformat(end.replace('Z', '+00:00'))
             ical_lines.append(f'DTEND:{dt.strftime("%Y%m%dT%H%M%S")}')
-        except:
+        except (ValueError, AttributeError):
             pass
     
     ical_lines.extend([
@@ -477,6 +479,8 @@ def generate_location_data(location_data):
     Returns:
         Geo URI string
     """
+    from urllib.parse import quote
+    
     latitude = location_data.get('location_latitude', '')
     longitude = location_data.get('location_longitude', '')
     name = location_data.get('location_name', '')
@@ -484,7 +488,7 @@ def generate_location_data(location_data):
     if latitude and longitude:
         geo_uri = f'geo:{latitude},{longitude}'
         if name:
-            geo_uri += f'?q={latitude},{longitude}({name})'
+            geo_uri += f'?q={latitude},{longitude}({quote(name)})'
         return geo_uri
     
     return ''

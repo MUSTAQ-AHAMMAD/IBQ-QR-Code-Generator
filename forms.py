@@ -95,7 +95,7 @@ class QRCodeGenerateForm(FlaskForm):
     contact_name = StringField('Contact Name', validators=[Optional(), Length(max=100)])
     contact_email = StringField('Email', validators=[Optional(), Email(), Length(max=120)])
     contact_phone = StringField('Phone', validators=[Optional(), Length(max=20)])
-    contact_website = StringField('Website', validators=[Optional(), Length(max=200)])
+    contact_website = StringField('Website', validators=[Optional(), URL(require_tld=False), Length(max=200)])
     contact_company = StringField('Company', validators=[Optional(), Length(max=100)])
     contact_title = StringField('Job Title', validators=[Optional(), Length(max=100)])
     contact_address = TextAreaField('Address', validators=[Optional(), Length(max=500)])
