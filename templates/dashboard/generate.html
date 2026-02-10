@@ -20,7 +20,7 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-body">
-                <form method="POST" novalidate id="qrCodeForm">
+                <form method="POST" enctype="multipart/form-data" novalidate id="qrCodeForm">
                     {{ form.hidden_tag() }}
                     
                     <h5 class="mb-3">Basic Information</h5>
@@ -298,7 +298,7 @@
                         <hr class="my-4">
                     </div>
                     
-                    <h5 class="mb-3">Customization</h5>
+                    <h5 class="mb-3"><i class="bi bi-palette me-2"></i>Basic Customization</h5>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -343,6 +343,87 @@
                             {{ form.border.label(class="form-label") }}
                             {{ form.border(class="form-control", placeholder="4") }}
                             <small class="form-text text-muted">White border width</small>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h5 class="mb-3"><i class="bi bi-stars me-2"></i>Advanced Design Options</h5>
+                    
+                    <!-- Logo Upload -->
+                    <div class="mb-3">
+                        {{ form.logo.label(class="form-label") }}
+                        {{ form.logo(class="form-control") }}
+                        <small class="form-text text-muted">Add a logo or icon to the center of your QR code (optional)</small>
+                    </div>
+                    
+                    <!-- Style Options -->
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ form.qr_style.label(class="form-label") }}
+                            {{ form.qr_style(class="form-select") }}
+                            <small class="form-text text-muted">Overall QR code pattern</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.eye_style.label(class="form-label") }}
+                            {{ form.eye_style(class="form-select") }}
+                            <small class="form-text text-muted">Corner markers style</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.data_style.label(class="form-label") }}
+                            {{ form.data_style(class="form-select") }}
+                            <small class="form-text text-muted">Data pattern style</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Gradient Options -->
+                    <div class="card mb-3 bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <div class="form-check">
+                                    {{ form.gradient_enabled(class="form-check-input") }}
+                                    {{ form.gradient_enabled.label(class="form-check-label") }}
+                                </div>
+                            </h6>
+                            <div id="gradientOptions" style="display: none;">
+                                <div class="row mt-3">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.gradient_color.label(class="form-label") }}
+                                        <div class="input-group">
+                                            {{ form.gradient_color(class="form-control", type="color") }}
+                                            <span class="input-group-text">Second Color</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.gradient_type.label(class="form-label") }}
+                                        {{ form.gradient_type(class="form-select") }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Frame Options -->
+                    <div class="card mb-3 bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">Frame Options</h6>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    {{ form.frame_style.label(class="form-label") }}
+                                    {{ form.frame_style(class="form-select", id="frameStyle") }}
+                                </div>
+                                <div class="col-md-4 mb-3" id="frameTextContainer" style="display: none;">
+                                    {{ form.frame_text.label(class="form-label") }}
+                                    {{ form.frame_text(class="form-control", placeholder="Scan Me!") }}
+                                </div>
+                                <div class="col-md-4 mb-3" id="frameColorContainer" style="display: none;">
+                                    {{ form.frame_color.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.frame_color(class="form-control", type="color") }}
+                                        <span class="input-group-text">Color</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -549,6 +630,38 @@ document.addEventListener('DOMContentLoaded', function() {
     qrTypeSelect.addEventListener('change', function() {
         showFieldsForType(this.value);
     });
+    
+    // Handle gradient options visibility
+    const gradientEnabled = document.getElementById('gradient_enabled');
+    const gradientOptions = document.getElementById('gradientOptions');
+    
+    if (gradientEnabled) {
+        gradientEnabled.addEventListener('change', function() {
+            gradientOptions.style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // Initial state
+        gradientOptions.style.display = gradientEnabled.checked ? 'block' : 'none';
+    }
+    
+    // Handle frame options visibility
+    const frameStyle = document.getElementById('frameStyle');
+    const frameTextContainer = document.getElementById('frameTextContainer');
+    const frameColorContainer = document.getElementById('frameColorContainer');
+    
+    if (frameStyle) {
+        frameStyle.addEventListener('change', function() {
+            const showText = this.value !== 'none';
+            const showColor = this.value !== 'none';
+            frameTextContainer.style.display = showText ? 'block' : 'none';
+            frameColorContainer.style.display = showColor ? 'block' : 'none';
+        });
+        
+        // Initial state
+        const showFrameOptions = frameStyle.value !== 'none';
+        frameTextContainer.style.display = showFrameOptions ? 'block' : 'none';
+        frameColorContainer.style.display = showFrameOptions ? 'block' : 'none';
+    }
 });
 </script>
 {% endblock %}
