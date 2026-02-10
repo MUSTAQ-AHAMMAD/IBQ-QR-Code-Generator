@@ -1,0 +1,177 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}My QR Codes - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">My QR Codes</li>
+            </ol>
+        </nav>
+        <h2>My QR Codes</h2>
+        <p class="text-muted">Manage all your generated QR codes</p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('generate_qr') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Generate New
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="GET" class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Search QR codes..." value="{{ search }}">
+            <button class="btn btn-outline-secondary" type="submit">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4">
+        <form method="GET">
+            <select name="category" class="form-select" onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                <option value="business" {% if category == 'business' %}selected{% endif %}>Business Card</option>
+                <option value="personal" {% if category == 'personal' %}selected{% endif %}>Personal</option>
+                <option value="event" {% if category == 'event' %}selected{% endif %}>Event</option>
+                <option value="product" {% if category == 'product' %}selected{% endif %}>Product</option>
+                <option value="other" {% if category == 'other' %}selected{% endif %}>Other</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+<!-- QR Codes Grid -->
+{% if qr_codes.items %}
+    <div class="row">
+        {% for qr in qr_codes.items %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    {% if qr.file_path %}
+                        <img src="{{ url_for('static', filename='../uploads/' + qr.filename) }}" 
+                             alt="{{ qr.name }}" 
+                             class="img-fluid mb-3" 
+                             style="max-height: 200px; object-fit: contain;">
+                    {% else %}
+                        <div class="bg-light p-4 mb-3">
+                            <i class="bi bi-qr-code display-1 text-muted"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <h5 class="card-title">{{ qr.name }}</h5>
+                    {% if qr.description %}
+                        <p class="card-text text-muted small">{{ qr.description[:100] }}{% if qr.description|length > 100 %}...{% endif %}</p>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        {% if qr.category %}
+                            <span class="badge bg-secondary">{{ qr.category }}</span>
+                        {% endif %}
+                        <span class="badge bg-info">{{ qr.file_format.upper() }}</span>
+                    </div>
+                    
+                    <div class="small text-muted mb-3">
+                        <i class="bi bi-calendar me-1"></i>{{ qr.created_at.strftime('%Y-%m-%d') }}
+                        <br>
+                        <i class="bi bi-download me-1"></i>{{ qr.download_count }} downloads
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="btn-group w-100" role="group">
+                        <a href="{{ url_for('view_qr_code', qr_id=qr.id) }}" class="btn btn-sm btn-outline-primary" title="View">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{{ url_for('edit_qr_code', qr_id=qr.id) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{{ url_for('download_qr_code', qr_id=qr.id) }}" class="btn btn-sm btn-outline-success" title="Download">
+                            <i class="bi bi-download"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                onclick="confirmDelete({{ qr.id }}, '{{ qr.name }}')" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if qr_codes.pages > 1 %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if qr_codes.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('my_qr_codes', page=qr_codes.prev_num, search=search, category=category) }}">Previous</a>
+                </li>
+            {% endif %}
+            
+            {% for page_num in qr_codes.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == qr_codes.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('my_qr_codes', page=page_num, search=search, category=category) }}">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if qr_codes.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('my_qr_codes', page=qr_codes.next_num, search=search, category=category) }}">Next</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+            <h4>No QR Codes Found</h4>
+            <p class="text-muted">{% if search %}Try a different search term{% else %}Get started by creating your first QR code{% endif %}</p>
+            <a href="{{ url_for('generate_qr') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Generate QR Code
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteItemName"></strong>?</p>
+                <p class="text-danger small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(qrId, qrName) {
+    document.getElementById('deleteItemName').textContent = qrName;
+    document.getElementById('deleteForm').action = "{{ url_for('delete_qr_code', qr_id=0) }}".replace('/0/', '/' + qrId + '/');
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

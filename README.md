@@ -1,281 +1,302 @@
 # IBQ QR Code Generator
 
-![QR Code Generator](https://img.shields.io/badge/QR-Code-Generator-blue)
-![Python](https://img.shields.io/badge/Python-3.9+-green)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-red)
-
-Professional QR code generator specifically designed for business/visiting cards with unlimited generation capability.
+A comprehensive, production-ready Python web application for generating QR codes specifically designed for business/visiting cards. Built with Flask and featuring a complete authentication system, professional dashboard, and unlimited QR code generation capabilities.
 
 ## Features
 
-### 🎯 Core Features
-- **Unlimited QR Code Generation** - No throttling or rate limits
-- **Multiple Output Formats** - PNG, SVG, and PDF support
-- **vCard Format** - Standard business card contact format
-- **Customization Options** - Size, colors, error correction, borders
-- **Logo Integration** - Add custom logos to QR codes
-- **Batch Processing** - Generate multiple QR codes at once
+### Authentication & Security
+- **User Authentication**: Complete login/registration system
+- **Password Security**: Bcrypt password hashing
+- **Session Management**: Secure session handling with timeout
+- **CSRF Protection**: Built-in protection against cross-site request forgery
+- **Account Security**: Failed login attempt tracking and account lockout
 
-### 🌐 Web Interface
-- Clean, intuitive user interface
-- Real-time form validation
-- Instant preview
-- One-click download
-- Responsive design
+### Dashboard & Navigation
+- **Professional Dashboard**: Modern, responsive interface with Bootstrap 5
+- **Multi-level Navigation**: Organized sidebar menu with all features
+- **Dark/Light Theme**: Toggle between themes with preference persistence
+- **Quick Statistics**: Real-time stats on QR codes generated
+- **Activity Timeline**: Track recent user actions
 
-### 🚀 RESTful API
-- FastAPI-powered endpoints
-- Comprehensive API documentation
-- JSON input/output
-- Error handling and validation
-- Batch generation support
+### QR Code Features
+- **Unlimited Generation**: Create unlimited QR codes without throttling
+- **Business Card Format**: vCard format for easy contact information sharing
+- **Customization**: Custom colors, sizes, error correction levels
+- **Multiple Formats**: Export as PNG, SVG, or PDF
+- **Template System**: Save and reuse favorite settings
+- **QR Code Management**: View, edit, download, and delete QR codes
 
-### ⚡ Performance
-- Efficient QR code generation
-- Built-in caching mechanism
-- Optimized for high-volume usage
-- Asynchronous processing support
+### Additional Features
+- **Template Management**: Create custom templates or use pre-built ones
+- **Search & Filter**: Easily find QR codes by name, description, or category
+- **Download Tracking**: Monitor QR code views and downloads
+- **API Key Generation**: For programmatic access (developer feature)
+- **Comprehensive Help**: Documentation, FAQ, and support pages
+
+## Tech Stack
+
+- **Backend**: Python 3.x with Flask 3.0
+- **Database**: SQLAlchemy with SQLite (upgradeable to PostgreSQL)
+- **Authentication**: Flask-Login for session management
+- **Forms**: Flask-WTF with validation
+- **QR Code**: qrcode library with PIL/Pillow
+- **Frontend**: HTML5, CSS3, Bootstrap 5, JavaScript
+- **Security**: Werkzeug password hashing, CSRF protection
 
 ## Installation
 
 ### Prerequisites
-- Python 3.9 or higher
-- pip package manager
+- Python 3.8 or higher
+- pip (Python package manager)
 
-### Quick Start
+### Setup Steps
 
 1. **Clone the repository**
-```bash
-git clone https://github.com/MUSTAQ-AHAMMAD/IBQ-QR-Code-Generator.git
-cd IBQ-QR-Code-Generator
-```
+   ```bash
+   git clone https://github.com/MUSTAQ-AHAMMAD/IBQ-QR-Code-Generator.git
+   cd IBQ-QR-Code-Generator
+   ```
 
-2. **Create virtual environment**
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+2. **Create a virtual environment**
+   ```bash
+   python -m venv venv
+   
+   # On Windows
+   venv\Scripts\activate
+   
+   # On Linux/Mac
+   source venv/bin/activate
+   ```
 
 3. **Install dependencies**
-```bash
-pip install -r requirements.txt
-```
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-4. **Configure environment (optional)**
-```bash
-cp .env.example .env
-# Edit .env with your settings
-```
+4. **Set up environment variables**
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+   
+   # Edit .env and set your configuration
+   # Important: Change the SECRET_KEY in production!
+   ```
 
-5. **Run the application**
-```bash
-python -m uvicorn app.main:app --reload
-```
+5. **Initialize the database**
+   ```bash
+   python app.py
+   ```
+   The database will be created automatically on first run.
 
-The application will be available at `http://localhost:8000`
-
-## Usage
-
-### Web Interface
-
-1. Open your browser and navigate to `http://localhost:8000`
-2. Fill in the business card information
-3. Customize QR code settings (optional)
-4. Click "Generate QR Code"
-5. Download your QR code
-
-### API Endpoints
-
-#### Generate Single QR Code
-```bash
-curl -X POST "http://localhost:8000/api/v1/generate" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "business_card": {
-      "name": "John Doe",
-      "phone": "+1-234-567-8900",
-      "email": "john.doe@company.com",
-      "company": "Tech Corp",
-      "job_title": "Software Engineer",
-      "website": "https://www.company.com"
-    },
-    "size": 10,
-    "border": 4,
-    "error_correction": "H",
-    "foreground_color": "black",
-    "background_color": "white",
-    "output_format": "png",
-    "include_logo": false
-  }'
-```
-
-#### Batch Generate QR Codes
-```bash
-curl -X POST "http://localhost:8000/api/v1/batch-generate" \
-  -H "Content-Type: application/json" \
-  -d '[
-    {
-      "business_card": {"name": "User 1", "email": "user1@example.com"},
-      "output_format": "png"
-    },
-    {
-      "business_card": {"name": "User 2", "email": "user2@example.com"},
-      "output_format": "svg"
-    }
-  ]'
-```
-
-#### Download QR Code
-```bash
-curl -O "http://localhost:8000/api/v1/download/{filename}"
-```
-
-### Python API
-
-```python
-from app.models.business_card import BusinessCard, QRCodeRequest
-from app.core.qr_generator import QRCodeGenerator
-
-# Create business card
-card = BusinessCard(
-    name="John Doe",
-    phone="+1-234-567-8900",
-    email="john.doe@company.com",
-    company="Tech Corp",
-    job_title="Software Engineer"
-)
-
-# Create QR code request
-request = QRCodeRequest(
-    business_card=card,
-    size=10,
-    border=4,
-    error_correction="H",
-    output_format="png"
-)
-
-# Generate QR code
-generator = QRCodeGenerator()
-filename, file_path = generator.generate(request)
-print(f"QR code saved to: {file_path}")
-```
-
-## Configuration
-
-### Environment Variables
-
-Copy `.env.example` to `.env` and configure:
-
-```env
-# Application Settings
-APP_NAME=IBQ QR Code Generator
-DEBUG=True
-
-# QR Code Settings
-DEFAULT_QR_SIZE=10
-DEFAULT_BORDER=4
-DEFAULT_ERROR_CORRECTION=H
-OUTPUT_DIRECTORY=output
-
-# Cache Settings
-ENABLE_CACHE=True
-CACHE_EXPIRY_SECONDS=3600
-```
-
-### QR Code Options
-
-- **Size**: 1-50 (box size in pixels)
-- **Border**: 0-10 (border width in boxes)
-- **Error Correction**:
-  - L: 7% error recovery
-  - M: 15% error recovery
-  - Q: 25% error recovery
-  - H: 30% error recovery (recommended)
-- **Output Formats**: PNG, SVG, PDF
-- **Colors**: Any valid color name or hex code
-
-## API Documentation
-
-Interactive API documentation is available at:
-- Swagger UI: `http://localhost:8000/api/docs`
-- ReDoc: `http://localhost:8000/api/redoc`
-
-## Testing
-
-Run the test suite:
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=app
-
-# Run specific test file
-pytest tests/test_vcard.py
-```
+6. **Access the application**
+   - Open your browser and navigate to: `http://localhost:5000`
+   - Default admin credentials:
+     - Username: `admin`
+     - Password: `admin123`
+   - **Important**: Change the admin password immediately after first login!
 
 ## Project Structure
 
 ```
 IBQ-QR-Code-Generator/
-├── app/
-│   ├── __init__.py
-│   ├── main.py              # FastAPI application
-│   ├── config.py            # Configuration management
-│   ├── api/
-│   │   ├── __init__.py
-│   │   └── qr_routes.py     # API endpoints
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── qr_generator.py  # Core QR generation
-│   │   └── vcard.py         # vCard formatter
-│   └── models/
-│       ├── __init__.py
-│       └── business_card.py # Data models
-├── templates/
-│   └── index.html           # Web interface
-├── static/
+├── app.py                  # Main application file
+├── config.py              # Configuration management
+├── models.py              # Database models
+├── forms.py               # WTForms definitions
+├── utils.py               # QR code utilities
+├── requirements.txt       # Python dependencies
+├── .env.example          # Example environment variables
+├── .gitignore            # Git ignore rules
+├── templates/            # HTML templates
+│   ├── base.html
+│   ├── dashboard_base.html
+│   ├── auth/            # Authentication pages
+│   ├── dashboard/       # Dashboard pages
+│   └── errors/          # Error pages
+├── static/              # Static files
 │   ├── css/
 │   │   └── style.css
 │   └── js/
-│       └── app.js
-├── tests/
-│   ├── __init__.py
-│   ├── test_vcard.py
-│   ├── test_qr_generator.py
-│   └── test_api.py
-├── output/                  # Generated QR codes
-├── requirements.txt
-├── .env.example
-├── .gitignore
-└── README.md
+│       └── main.js
+└── uploads/             # Generated QR codes (created automatically)
 ```
 
-## Security Considerations
+## Usage
 
-- Input validation on all endpoints
-- File size limits for logo uploads
-- Sanitized file paths
-- CORS configuration
-- No sensitive data storage by default
+### Generating Your First QR Code
 
-## Performance Tips
+1. Log in to your account
+2. Click "Generate QR Code" in the sidebar
+3. Fill in the business card information:
+   - Name, title, company
+   - Email, phone, website
+   - Address
+4. Customize appearance (optional):
+   - Choose colors
+   - Set size and error correction
+   - Select output format
+5. Click "Generate QR Code"
+6. Download your QR code
 
-1. **Enable Caching**: Set `ENABLE_CACHE=True` in `.env`
-2. **Batch Processing**: Use batch endpoint for multiple QR codes
-3. **Output Format**: SVG is smallest, PNG is most compatible
-4. **Error Correction**: Higher levels increase QR code size
+### Managing QR Codes
+
+- **View All**: Navigate to "My QR Codes" to see all generated codes
+- **Search**: Use the search bar to find specific QR codes
+- **Filter**: Filter by category
+- **Edit**: Update name, description, and category
+- **Download**: Download in the original format
+- **Delete**: Remove unwanted QR codes
+
+### Using Templates
+
+1. Navigate to "Templates"
+2. Click "Create Template"
+3. Set your preferred colors and settings
+4. Save the template
+5. When generating new QR codes, select your template from the dropdown
+
+## Configuration
+
+### Environment Variables
+
+Edit the `.env` file to configure:
+
+```env
+SECRET_KEY=your-secret-key-here
+DATABASE_URL=sqlite:///qrcode_generator.db
+UPLOAD_FOLDER=uploads
+MAX_CONTENT_LENGTH=16777216
+SESSION_COOKIE_SECURE=False
+SESSION_COOKIE_HTTPONLY=True
+PERMANENT_SESSION_LIFETIME=3600
+MAX_LOGIN_ATTEMPTS=5
+ACCOUNT_LOCKOUT_DURATION=900
+```
+
+### Database Configuration
+
+By default, the application uses SQLite. To use PostgreSQL:
+
+1. Install PostgreSQL driver:
+   ```bash
+   pip install psycopg2-binary
+   ```
+
+2. Update `DATABASE_URL` in `.env`:
+   ```env
+   DATABASE_URL=postgresql://username:password@localhost/dbname
+   ```
+
+## Security Features
+
+- **Password Hashing**: All passwords are hashed using Werkzeug's security utilities
+- **CSRF Protection**: All forms include CSRF tokens
+- **Session Security**: Secure session cookies with configurable timeout
+- **Account Lockout**: Automatic lockout after failed login attempts
+- **Input Validation**: Server-side validation for all user inputs
+- **SQL Injection Prevention**: SQLAlchemy ORM protects against SQL injection
+
+## API Access
+
+The application includes API key generation for programmatic access:
+
+1. Navigate to Settings > API Key
+2. Click "Generate API Key"
+3. Copy and securely store your API key
+4. Use the API key in your HTTP requests
+
+## Troubleshooting
+
+### Common Issues
+
+**Database errors on startup**
+- Delete the existing database file and restart the application
+- Check file permissions in the project directory
+
+**QR codes not displaying**
+- Ensure the `uploads` folder exists and is writable
+- Check file permissions
+
+**Theme not persisting**
+- Clear browser local storage
+- Check browser console for JavaScript errors
+
+**Upload errors**
+- Check `MAX_CONTENT_LENGTH` in configuration
+- Ensure sufficient disk space
+
+## Development
+
+### Running in Development Mode
+
+```bash
+# Set Flask environment
+export FLASK_ENV=development  # Linux/Mac
+set FLASK_ENV=development     # Windows
+
+# Run the application
+python app.py
+```
+
+### Database Migrations
+
+The application uses Flask-Migrate for database migrations:
+
+```bash
+# Initialize migrations (first time only)
+flask db init
+
+# Create a migration
+flask db migrate -m "Description of changes"
+
+# Apply migrations
+flask db upgrade
+```
+
+## Production Deployment
+
+### Preparation
+
+1. **Update configuration**:
+   - Set `FLASK_ENV=production`
+   - Set `SECRET_KEY` to a strong random value
+   - Set `SESSION_COOKIE_SECURE=True`
+   - Configure production database
+
+2. **Use a production WSGI server**:
+   ```bash
+   pip install gunicorn
+   gunicorn -w 4 -b 0.0.0.0:8000 app:app
+   ```
+
+3. **Set up reverse proxy** (nginx example):
+   ```nginx
+   server {
+       listen 80;
+       server_name your-domain.com;
+       
+       location / {
+           proxy_pass http://127.0.0.1:8000;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+       }
+       
+       location /static {
+           alias /path/to/IBQ-QR-Code-Generator/static;
+       }
+   }
+   ```
+
+4. **Enable HTTPS** with Let's Encrypt
 
 ## Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome! Please follow these steps:
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests
-5. Submit a pull request
+4. Submit a pull request
 
 ## License
 
@@ -283,14 +304,28 @@ This project is licensed under the MIT License.
 
 ## Support
 
-For issues, questions, or contributions, please open an issue on GitHub.
+- **Documentation**: Available in the application under Help > Documentation
+- **FAQ**: Check Help > FAQ for common questions
+- **Issues**: Report bugs on GitHub Issues
+- **Contact**: Use the contact form in the application
 
 ## Acknowledgments
 
-- Built with [FastAPI](https://fastapi.tiangolo.com/)
-- QR code generation by [qrcode](https://github.com/lincolnloop/python-qrcode)
-- Styling inspired by modern web design principles
+- Flask framework and extensions
+- Bootstrap 5 for UI components
+- qrcode library for QR code generation
+- Bootstrap Icons for icons
+
+## Version History
+
+### v1.0.0 (2024)
+- Initial release
+- Complete authentication system
+- QR code generation and management
+- Template system
+- Dark/light theme support
+- Comprehensive documentation
 
 ---
 
-Made with ❤️ for business professionals worldwide
+**Made with ❤️ by MUSTAQ-AHAMMAD**

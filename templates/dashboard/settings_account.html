@@ -1,0 +1,74 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Account Settings - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Account Settings</li>
+            </ol>
+        </nav>
+        <h2>Account Settings</h2>
+        <p class="text-muted">Manage your account preferences</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <h5 class="mb-3">Appearance</h5>
+                    
+                    <div class="mb-3">
+                        {{ form.theme.label(class="form-label") }}
+                        {{ form.theme(class="form-select") }}
+                        <div class="form-text">Choose your preferred theme</div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h5 class="mb-3">Notifications</h5>
+                    
+                    <div class="mb-3 form-check">
+                        {{ form.notifications_enabled(class="form-check-input") }}
+                        {{ form.notifications_enabled.label(class="form-check-label") }}
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Quick Links</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('settings_profile') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-person me-2"></i>Profile Settings
+                    </a>
+                    <a href="{{ url_for('settings_password') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-shield-lock me-2"></i>Change Password
+                    </a>
+                    <a href="{{ url_for('settings_api_key') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-key me-2"></i>API Key
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

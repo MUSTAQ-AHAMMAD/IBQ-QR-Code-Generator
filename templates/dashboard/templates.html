@@ -1,0 +1,109 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Templates - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Templates</li>
+            </ol>
+        </nav>
+        <h2>Templates</h2>
+        <p class="text-muted">Manage your QR code templates</p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('create_template') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Create Template
+        </a>
+    </div>
+</div>
+
+<!-- My Templates -->
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">My Templates</h5>
+    </div>
+    <div class="card-body">
+        {% if user_templates %}
+            <div class="row">
+                {% for template in user_templates %}
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <h6 class="card-title mb-0">{{ template.name }}</h6>
+                                {% if template.is_public %}
+                                    <span class="badge bg-success">Public</span>
+                                {% endif %}
+                            </div>
+                            {% if template.description %}
+                                <p class="card-text small text-muted">{{ template.description }}</p>
+                            {% endif %}
+                            <div class="mb-2">
+                                <span class="badge" style="background-color: {{ template.foreground_color }};">Foreground</span>
+                                <span class="badge" style="background-color: {{ template.background_color }}; color: {{ template.foreground_color }};">Background</span>
+                            </div>
+                            <div class="small text-muted mb-2">
+                                <i class="bi bi-graph-up me-1"></i>Used {{ template.usage_count }} times
+                            </div>
+                            {% if not template.is_default %}
+                            <form method="POST" action="{{ url_for('delete_template', template_id=template.id) }}" onsubmit="return confirm('Are you sure?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-inbox display-4 d-block mb-3"></i>
+                <p>No templates yet. <a href="{{ url_for('create_template') }}">Create your first one!</a></p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Public Templates -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">Public Templates</h5>
+    </div>
+    <div class="card-body">
+        {% if public_templates %}
+            <div class="row">
+                {% for template in public_templates %}
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ template.name }}</h6>
+                            {% if template.description %}
+                                <p class="card-text small text-muted">{{ template.description }}</p>
+                            {% endif %}
+                            <div class="mb-2">
+                                <span class="badge" style="background-color: {{ template.foreground_color }};">Foreground</span>
+                                <span class="badge" style="background-color: {{ template.background_color }}; color: {{ template.foreground_color }};">Background</span>
+                            </div>
+                            <div class="small text-muted">
+                                <i class="bi bi-graph-up me-1"></i>Used {{ template.usage_count }} times
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center text-muted py-4">
+                <p>No public templates available</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

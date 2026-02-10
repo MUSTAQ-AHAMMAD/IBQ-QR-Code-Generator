@@ -1,0 +1,188 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Documentation - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('help_page') }}">Help & Support</a></li>
+                <li class="breadcrumb-item active">Documentation</li>
+            </ol>
+        </nav>
+        <h2>Documentation</h2>
+        <p class="text-muted">Complete guide to using {{ app_name }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-3">
+        <div class="card sticky-top" style="top: 20px;">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Table of Contents</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                <a href="#intro" class="list-group-item list-group-item-action">Introduction</a>
+                <a href="#getting-started" class="list-group-item list-group-item-action">Getting Started</a>
+                <a href="#generating" class="list-group-item list-group-item-action">Generating QR Codes</a>
+                <a href="#managing" class="list-group-item list-group-item-action">Managing QR Codes</a>
+                <a href="#templates" class="list-group-item list-group-item-action">Templates</a>
+                <a href="#customization" class="list-group-item list-group-item-action">Customization</a>
+                <a href="#best-practices" class="list-group-item list-group-item-action">Best Practices</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-9">
+        <div class="card mb-4" id="intro">
+            <div class="card-body">
+                <h3>Introduction</h3>
+                <p>{{ app_name }} is a comprehensive solution for creating professional QR codes for business cards and visiting cards. With our platform, you can:</p>
+                <ul>
+                    <li>Generate unlimited QR codes</li>
+                    <li>Store contact information in vCard format</li>
+                    <li>Customize colors, sizes, and formats</li>
+                    <li>Save and reuse templates</li>
+                    <li>Track downloads and views</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mb-4" id="getting-started">
+            <div class="card-body">
+                <h3>Getting Started</h3>
+                <h5>1. Create an Account</h5>
+                <p>Register for a free account to start generating QR codes.</p>
+                
+                <h5>2. Login</h5>
+                <p>Access your dashboard using your credentials.</p>
+                
+                <h5>3. Navigate</h5>
+                <p>Use the sidebar menu to access different features.</p>
+            </div>
+        </div>
+        
+        <div class="card mb-4" id="generating">
+            <div class="card-body">
+                <h3>Generating QR Codes</h3>
+                <p>To generate a new QR code:</p>
+                <ol>
+                    <li>Click <strong>Generate QR Code</strong> in the sidebar</li>
+                    <li>Enter a name for your QR code</li>
+                    <li>Fill in the contact information fields</li>
+                    <li>Choose customization options (optional)</li>
+                    <li>Click <strong>Generate QR Code</strong></li>
+                </ol>
+                
+                <h5>Contact Information Fields</h5>
+                <ul>
+                    <li><strong>Name:</strong> Full name of the contact</li>
+                    <li><strong>Title:</strong> Job title or position</li>
+                    <li><strong>Company:</strong> Company or organization name</li>
+                    <li><strong>Email:</strong> Email address</li>
+                    <li><strong>Phone:</strong> Phone number</li>
+                    <li><strong>Website:</strong> URL of website</li>
+                    <li><strong>Address:</strong> Physical address</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mb-4" id="managing">
+            <div class="card-body">
+                <h3>Managing QR Codes</h3>
+                <p>Access <strong>My QR Codes</strong> to view and manage all your generated QR codes.</p>
+                
+                <h5>Available Actions</h5>
+                <ul>
+                    <li><strong>View:</strong> See detailed information about a QR code</li>
+                    <li><strong>Edit:</strong> Update name, description, and category</li>
+                    <li><strong>Download:</strong> Download the QR code file</li>
+                    <li><strong>Delete:</strong> Remove a QR code permanently</li>
+                </ul>
+                
+                <h5>Search and Filter</h5>
+                <p>Use the search bar to find specific QR codes by name or description. Filter by category to organize your codes.</p>
+            </div>
+        </div>
+        
+        <div class="card mb-4" id="templates">
+            <div class="card-body">
+                <h3>Templates</h3>
+                <p>Templates allow you to save your favorite QR code settings for quick reuse.</p>
+                
+                <h5>Creating a Template</h5>
+                <ol>
+                    <li>Navigate to <strong>Templates</strong></li>
+                    <li>Click <strong>Create Template</strong></li>
+                    <li>Set your preferred colors and settings</li>
+                    <li>Save the template</li>
+                </ol>
+                
+                <h5>Using Templates</h5>
+                <p>When generating a new QR code, select a template from the dropdown to apply its settings automatically.</p>
+            </div>
+        </div>
+        
+        <div class="card mb-4" id="customization">
+            <div class="card-body">
+                <h3>Customization Options</h3>
+                
+                <h5>Colors</h5>
+                <ul>
+                    <li><strong>Foreground Color:</strong> The color of the QR code pattern</li>
+                    <li><strong>Background Color:</strong> The background color</li>
+                </ul>
+                <p class="text-muted">Ensure good contrast for optimal scanning.</p>
+                
+                <h5>Size</h5>
+                <p>Set the dimensions of the QR code in pixels. Default is 300x300px.</p>
+                
+                <h5>Error Correction</h5>
+                <ul>
+                    <li><strong>Low (7%):</strong> Smallest size, minimal damage tolerance</li>
+                    <li><strong>Medium (15%):</strong> Balanced option</li>
+                    <li><strong>Quartile (25%):</strong> Good for print</li>
+                    <li><strong>High (30%):</strong> Best for logos, highest damage tolerance</li>
+                </ul>
+                
+                <h5>File Format</h5>
+                <ul>
+                    <li><strong>PNG:</strong> Raster format, best for web</li>
+                    <li><strong>SVG:</strong> Vector format, scalable</li>
+                    <li><strong>PDF:</strong> Document format, ideal for printing</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mb-4" id="best-practices">
+            <div class="card-body">
+                <h3>Best Practices</h3>
+                
+                <h5>Design</h5>
+                <ul>
+                    <li>Use high contrast colors (black on white is ideal)</li>
+                    <li>Ensure adequate size for the intended use</li>
+                    <li>Test your QR code before printing</li>
+                    <li>Leave white space around the QR code</li>
+                </ul>
+                
+                <h5>Printing</h5>
+                <ul>
+                    <li>Use SVG or PDF for best print quality</li>
+                    <li>Choose High error correction for printed codes</li>
+                    <li>Minimum size for printing: 2cm x 2cm</li>
+                    <li>Test scan from the expected viewing distance</li>
+                </ul>
+                
+                <h5>Content</h5>
+                <ul>
+                    <li>Keep contact information up to date</li>
+                    <li>Include essential details only</li>
+                    <li>Use standard formatting for phone numbers and emails</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

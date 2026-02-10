@@ -1,0 +1,119 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Help & Support - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Help & Support</h2>
+        <p class="text-muted">Find answers and get assistance</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-book display-3 text-primary mb-3"></i>
+                <h5>Documentation</h5>
+                <p class="text-muted">Comprehensive guides and tutorials</p>
+                <a href="{{ url_for('documentation') }}" class="btn btn-outline-primary">View Documentation</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-chat-left-text display-3 text-success mb-3"></i>
+                <h5>FAQ</h5>
+                <p class="text-muted">Frequently asked questions</p>
+                <a href="{{ url_for('faq') }}" class="btn btn-outline-success">View FAQ</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-envelope display-3 text-info mb-3"></i>
+                <h5>Contact Support</h5>
+                <p class="text-muted">Get in touch with our team</p>
+                <a href="{{ url_for('contact') }}" class="btn btn-outline-info">Contact Us</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Quick Help Topics</h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="helpAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                Getting Started
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <p>Welcome to {{ app_name }}! Here's how to get started:</p>
+                                <ol>
+                                    <li>Navigate to <strong>Generate QR Code</strong> from the sidebar</li>
+                                    <li>Fill in your business card information</li>
+                                    <li>Customize the appearance (optional)</li>
+                                    <li>Click <strong>Generate QR Code</strong></li>
+                                    <li>Download your QR code and use it on your materials</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                Managing QR Codes
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <p>All your QR codes are stored in <strong>My QR Codes</strong>. From there you can:</p>
+                                <ul>
+                                    <li>View all your generated QR codes</li>
+                                    <li>Search and filter by category</li>
+                                    <li>Edit QR code information</li>
+                                    <li>Download QR codes in different formats</li>
+                                    <li>Delete unwanted QR codes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                Using Templates
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body">
+                                <p>Templates help you save time by storing your favorite QR code settings:</p>
+                                <ul>
+                                    <li>Create templates with your preferred colors and settings</li>
+                                    <li>Select a template when generating new QR codes</li>
+                                    <li>Share templates by making them public</li>
+                                    <li>Use default templates provided by the system</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
