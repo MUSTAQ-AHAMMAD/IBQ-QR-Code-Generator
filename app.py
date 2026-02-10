@@ -2,7 +2,8 @@
 Main Flask application for IBQ QR Code Generator.
 """
 import os
-from flask import Flask, render_template, redirect, url_for, flash, request, send_file, jsonify
+import secrets
+from flask import Flask, render_template, redirect, url_for, flash, request, send_file, jsonify, Response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import generate_csrf
 from urllib.parse import urlparse
@@ -148,7 +149,6 @@ def create_app(config_name='default'):
         vcard_content = qr_code.qr_data
         
         # Create response with vCard content
-        from flask import Response
         response = Response(vcard_content, mimetype='text/vcard')
         response.headers['Content-Disposition'] = f'attachment; filename="{qr_code.contact_name or "contact"}.vcf"'
         
@@ -314,7 +314,6 @@ def create_app(config_name='default'):
                 vcard_data = generate_vcard(contact_data)
                 
                 # Generate public token first
-                import secrets
                 public_token = secrets.token_urlsafe(16)
                 
                 # Create QR code record

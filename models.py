@@ -124,11 +124,6 @@ class QRCode(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    def generate_public_token(self):
-        """Generate a unique public token for the QR code profile URL."""
-        self.public_token = secrets.token_urlsafe(16)
-        return self.public_token
-    
     def __repr__(self):
         return f'<QRCode {self.name}>'
 
