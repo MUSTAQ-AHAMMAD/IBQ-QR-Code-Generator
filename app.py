@@ -3,7 +3,7 @@ Main Flask application for IBQ QR Code Generator.
 """
 import os
 import secrets
-from flask import Flask, render_template, redirect, url_for, flash, request, send_file, jsonify, Response
+from flask import Flask, render_template, redirect, url_for, flash, request, send_file, jsonify, Response, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import generate_csrf
 from urllib.parse import urlparse
@@ -633,15 +633,22 @@ def create_app(config_name='default'):
         """Serve company logo files (public, used on contact profile pages)."""
         from werkzeug.utils import secure_filename
         safe_filename = secure_filename(filename)
+        # Reject if secure_filename stripped everything (e.g. path traversal input)
+        if not safe_filename:
+            abort(404)
         # Only serve files that are registered as a company_logo in the users table
         user = User.query.filter_by(company_logo=safe_filename).first()
         if not user:
-            return "File not found", 404
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_filename)
+            abort(404)
         upload_folder = os.path.abspath(app.config['UPLOAD_FOLDER'])
-        abs_file_path = os.path.abspath(file_path)
-        if not abs_file_path.startswith(upload_folder) or not os.path.exists(abs_file_path):
-            return "File not found", 404
+        abs_file_path = os.path.abspath(os.path.join(upload_folder, safe_filename))
+        # Ensure the resolved path stays within the upload folder
+        try:
+            common = os.path.commonpath([upload_folder, abs_file_path])
+        except ValueError:
+            abort(404)
+        if common != upload_folder or not os.path.exists(abs_file_path):
+            abort(404)
         return send_file(abs_file_path)
 
     @app.route('/settings/profile', methods=['GET', 'POST'])
@@ -674,8 +681,11 @@ def create_app(config_name='default'):
             # Delete old logo file only after the DB commit succeeds
             if old_logo:
                 old_path = os.path.join(app.config['UPLOAD_FOLDER'], old_logo)
-                if os.path.exists(old_path):
-                    os.remove(old_path)
+                try:
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                except OSError as exc:
+                    app.logger.warning("Could not remove old company logo %s: %s", old_path, exc)
             
             log_action('update_profile', 'user', current_user.id, status='success')
             flash('Profile updated successfully!', 'success')
