@@ -9,6 +9,15 @@
             <!-- Contact Card -->
             <div class="card shadow-lg border-0">
                 <div class="card-body p-5 text-center">
+                    <!-- Company Logo -->
+                    {% if contact.user and contact.user.company_logo %}
+                    <div class="mb-4">
+                        <img src="{{ url_for('serve_company_logo', filename=contact.user.company_logo) }}"
+                             alt="{{ contact.user.company or 'Company' }} Logo"
+                             style="max-height: 80px; max-width: 220px; object-fit: contain;">
+                    </div>
+                    {% endif %}
+                    
                     <!-- Profile Header -->
                     <div class="mb-4">
                         <div class="bg-primary bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 

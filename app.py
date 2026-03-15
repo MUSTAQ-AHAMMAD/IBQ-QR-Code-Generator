@@ -369,15 +369,6 @@ def create_app(config_name='default'):
                 # Generate QR data based on type
                 qr_data = generate_qr_data(qr_type, form_data)
                 
-                # Handle custom image upload for vCard
-                custom_image_filename = None
-                custom_image_path = None
-                if qr_type == 'vcard' and form.contact_image.data:
-                    custom_image_filename, custom_image_path = save_uploaded_image(
-                        form.contact_image.data, 
-                        prefix=f'contact_{current_user.id}'
-                    )
-                
                 # Generate public token
                 public_token = secrets.token_urlsafe(PUBLIC_TOKEN_LENGTH)
                 
@@ -400,31 +391,16 @@ def create_app(config_name='default'):
                     template_id=form.template_id.data if form.template_id.data else None
                 )
                 
-                # For vcard, generate profile URL; for others, use direct data
-                if qr_type == 'vcard':
-                    qr_code_data = url_for('contact_profile', token=public_token, _external=True)
-                else:
-                    qr_code_data = qr_data
+                # Encode QR data directly for all types (no profile URL)
+                qr_code_data = qr_data
                 
-                # Handle logo upload
-                logo_path = None
-                if form.logo.data:
-                    from werkzeug.utils import secure_filename
-                    logo_file = form.logo.data
-                    # Sanitize the filename
-                    safe_name = secure_filename(form.name.data)
-                    logo_filename = generate_filename('logo_' + safe_name, 'png')
-                    logo_path = os.path.join(app.config['UPLOAD_FOLDER'], logo_filename)
-                    logo_file.save(logo_path)
-                
-                # QR code settings
+                # QR code settings (no logo embedding)
                 settings = {
                     'size': form.size.data or 300,
                     'foreground_color': form.foreground_color.data or '#000000',
                     'background_color': form.background_color.data or '#FFFFFF',
                     'error_correction': form.error_correction.data or 'H',
                     'border': form.border.data or 4,
-                    'logo_path': logo_path,
                     'qr_style': form.qr_style.data or 'square',
                     'gradient_enabled': form.gradient_enabled.data or False,
                     'gradient_color': form.gradient_color.data if form.gradient_enabled.data else None,
@@ -439,11 +415,10 @@ def create_app(config_name='default'):
                 # Generate QR code
                 file_format = form.file_format.data or 'png'
                 
-                # For vCard with custom image, we need to add the logo after generation
                 if file_format == 'svg':
                     qr_img = create_qr_code_svg(qr_code_data, settings)
                 else:
-                    qr_img = create_qr_code(qr_code_data, settings, logo_path=custom_image_path if qr_type == 'vcard' else None)
+                    qr_img = create_qr_code(qr_code_data, settings)
                 
                 # Save to file
                 filename = generate_filename(form.name.data, file_format)
@@ -460,7 +435,6 @@ def create_app(config_name='default'):
                 qr_code.background_color = settings['background_color']
                 qr_code.error_correction = settings['error_correction']
                 qr_code.border = settings['border']
-                qr_code.logo_path = logo_path
                 qr_code.qr_style = settings['qr_style']
                 qr_code.gradient_enabled = settings['gradient_enabled']
                 qr_code.gradient_color = settings['gradient_color']
@@ -470,10 +444,6 @@ def create_app(config_name='default'):
                 qr_code.frame_color = settings['frame_color']
                 qr_code.eye_style = settings['eye_style']
                 qr_code.data_style = settings['data_style']
-                
-                # Save custom image path if uploaded
-                if custom_image_path:
-                    qr_code.custom_image_path = custom_image_path
                 
                 db.session.add(qr_code)
                 db.session.commit()
@@ -658,6 +628,22 @@ def create_app(config_name='default'):
         flash('Template deleted successfully!', 'success')
         return redirect(url_for('templates'))
     
+    @app.route('/company-logo/<filename>')
+    def serve_company_logo(filename):
+        """Serve company logo files (public, used on contact profile pages)."""
+        from werkzeug.utils import secure_filename
+        safe_filename = secure_filename(filename)
+        # Only serve files that are registered as a company_logo in the users table
+        user = User.query.filter_by(company_logo=safe_filename).first()
+        if not user:
+            return "File not found", 404
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_filename)
+        upload_folder = os.path.abspath(app.config['UPLOAD_FOLDER'])
+        abs_file_path = os.path.abspath(file_path)
+        if not abs_file_path.startswith(upload_folder) or not os.path.exists(abs_file_path):
+            return "File not found", 404
+        return send_file(abs_file_path)
+
     @app.route('/settings/profile', methods=['GET', 'POST'])
     @login_required
     def settings_profile():
@@ -670,8 +656,26 @@ def create_app(config_name='default'):
             current_user.email = form.email.data
             current_user.company = form.company.data
             current_user.phone = form.phone.data
+            
+            # Handle company logo upload
+            old_logo = None
+            if form.company_logo.data:
+                logo_filename, logo_filepath = save_uploaded_image(
+                    form.company_logo.data,
+                    prefix=f'company_logo_{current_user.id}'
+                )
+                if logo_filename:
+                    old_logo = current_user.company_logo
+                    current_user.company_logo = logo_filename
+            
             current_user.updated_at = datetime.utcnow()
             db.session.commit()
+            
+            # Delete old logo file only after the DB commit succeeds
+            if old_logo:
+                old_path = os.path.join(app.config['UPLOAD_FOLDER'], old_logo)
+                if os.path.exists(old_path):
+                    os.remove(old_path)
             
             log_action('update_profile', 'user', current_user.id, status='success')
             flash('Profile updated successfully!', 'success')

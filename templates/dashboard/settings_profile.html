@@ -20,7 +20,7 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-body">
-                <form method="POST" novalidate>
+                <form method="POST" enctype="multipart/form-data" novalidate>
                     {{ form.hidden_tag() }}
                     
                     <div class="row">
@@ -52,6 +52,24 @@
                     <div class="mb-3">
                         {{ form.phone.label(class="form-label") }}
                         {{ form.phone(class="form-control", placeholder="+1234567890") }}
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <h5 class="mb-3"><i class="bi bi-building me-2"></i>Company Branding</h5>
+                    
+                    <div class="mb-3">
+                        {{ form.company_logo.label(class="form-label") }}
+                        {% if current_user.company_logo %}
+                        <div class="mb-2">
+                            <img src="{{ url_for('serve_company_logo', filename=current_user.company_logo) }}"
+                                 alt="Current Company Logo"
+                                 style="max-height: 80px; max-width: 200px; object-fit: contain; border: 1px solid #dee2e6; border-radius: 6px; padding: 4px; background: #fff;">
+                            <small class="text-muted d-block mt-1">Current logo — upload a new file to replace it</small>
+                        </div>
+                        {% endif %}
+                        {{ form.company_logo(class="form-control") }}
+                        <small class="form-text text-muted">Upload your company logo (PNG, JPG). It will be displayed on your public contact profile page.</small>
                     </div>
                     
                     <hr class="my-4">

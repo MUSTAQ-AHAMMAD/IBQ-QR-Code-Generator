@@ -1,8 +1,8 @@
 """
-Database migration script to add missing columns to the qr_codes table.
+Database migration script to add missing columns to the qr_codes and users tables.
 
 This script checks for and adds any columns that are defined in the
-QRCode model but missing from the database. This is needed for users
+QRCode and User models but missing from the database. This is needed for users
 upgrading from older versions of the application.
 
 Supports all database backends configured via DATABASE_URL (SQLite,
@@ -15,7 +15,7 @@ from flask import Flask
 from sqlalchemy import inspect, text
 import re
 from config import config
-from models import db, QRCode
+from models import db, QRCode, User
 
 
 def get_app():
@@ -46,8 +46,48 @@ def _get_column_sql_type(column):
     return "TEXT"
 
 
+def _migrate_table(conn, inspector, table_name, model_class):
+    """Add missing columns from the model to the given table."""
+    if table_name not in inspector.get_table_names():
+        print(f"Table '{table_name}' does not exist yet.")
+        print("No migration needed - the database will be created with the correct schema.")
+        return True
+
+    existing_columns = {col['name'] for col in inspector.get_columns(table_name)}
+    model_columns = {col.name: col for col in model_class.__table__.columns}
+    missing = set(model_columns.keys()) - existing_columns
+
+    if not missing:
+        print(f"✓ Table '{table_name}': all columns present. No migration needed.")
+        return True
+
+    print(f"Table '{table_name}': found {len(missing)} missing column(s): {', '.join(sorted(missing))}")
+
+    for col_name in sorted(missing):
+        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', col_name):
+            print(f"  ✗ Skipping invalid column name: '{col_name}'")
+            continue
+        col = model_columns[col_name]
+        sql_type = _get_column_sql_type(col)
+        print(f"  Adding column '{col_name}' ({sql_type}) to '{table_name}'...")
+        conn.execute(text(
+            f"ALTER TABLE {table_name} ADD COLUMN {col_name} {sql_type}"
+        ))
+
+    # Verify
+    inspector2 = inspect(db.engine)
+    existing_after = {col['name'] for col in inspector2.get_columns(table_name)}
+    still_missing = set(model_columns.keys()) - existing_after
+    if still_missing:
+        print(f"✗ Migration incomplete for '{table_name}'. Still missing: {', '.join(sorted(still_missing))}")
+        return False
+
+    print(f"✓ Table '{table_name}': migration successful.")
+    return True
+
+
 def migrate_database():
-    """Add any missing columns to the qr_codes table."""
+    """Add any missing columns to the qr_codes and users tables."""
     try:
         app = get_app()
     except Exception as e:
@@ -62,55 +102,12 @@ def migrate_database():
         print(f"Database URI: {db_uri}")
 
         try:
-            # Use SQLAlchemy inspector to check existing columns
             inspector = inspect(db.engine)
-
-            # Check if qr_codes table exists
-            if 'qr_codes' not in inspector.get_table_names():
-                print("Table 'qr_codes' does not exist yet.")
-                print("No migration needed - the database will be created with the correct schema.")
-                return True
-
-            # Get existing columns in the database
-            existing_columns = {col['name'] for col in inspector.get_columns('qr_codes')}
-
-            # Get expected columns from the QRCode model
-            model_columns = {col.name: col for col in QRCode.__table__.columns}
-
-            # Find missing columns
-            missing = set(model_columns.keys()) - existing_columns
-
-            if not missing:
-                print("✓ All columns are present. No migration needed.")
-                return True
-
-            print(f"Found {len(missing)} missing column(s): {', '.join(sorted(missing))}")
-
-            # Add each missing column
             with db.engine.connect() as conn:
-                for col_name in sorted(missing):
-                    if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', col_name):
-                        print(f"  ✗ Skipping invalid column name: '{col_name}'")
-                        continue
-                    col = model_columns[col_name]
-                    sql_type = _get_column_sql_type(col)
-                    print(f"  Adding column '{col_name}' ({sql_type})...")
-                    conn.execute(text(
-                        f"ALTER TABLE qr_codes ADD COLUMN {col_name} {sql_type}"
-                    ))
+                ok_qr = _migrate_table(conn, inspector, 'qr_codes', QRCode)
+                ok_users = _migrate_table(conn, inspector, 'users', User)
                 conn.commit()
-
-            # Verify all columns were added
-            inspector = inspect(db.engine)
-            existing_columns = {col['name'] for col in inspector.get_columns('qr_codes')}
-            still_missing = set(model_columns.keys()) - existing_columns
-
-            if not still_missing:
-                print("✓ Migration successful! All missing columns have been added.")
-                return True
-            else:
-                print(f"✗ Migration incomplete. Still missing: {', '.join(sorted(still_missing))}")
-                return False
+            return ok_qr and ok_users
 
         except Exception as e:
             print(f"✗ Database error: {e}")
