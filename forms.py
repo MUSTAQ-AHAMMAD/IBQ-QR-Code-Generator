@@ -100,7 +100,7 @@ class QRCodeGenerateForm(FlaskForm):
     contact_company = StringField('Company', validators=[Optional(), Length(max=100)])
     contact_title = StringField('Job Title', validators=[Optional(), Length(max=100)])
     contact_address = TextAreaField('Address', validators=[Optional(), Length(max=500)])
-    contact_image = FileField('Profile Image', validators=[Optional(), FileAllowed(['png', 'jpg', 'jpeg'], 'Images only!')])
+
     
     # URL field
     url = StringField('URL', validators=[Optional(), Length(max=2000)])
@@ -166,7 +166,6 @@ class QRCodeGenerateForm(FlaskForm):
     ], default='png')
     
     # Advanced design options
-    logo = FileField('Logo Image', validators=[FileAllowed(['png', 'jpg', 'jpeg'], 'Images only!')])
     qr_style = SelectField('QR Code Style', choices=[
         ('square', 'Square (Classic)'),
         ('rounded', 'Rounded Corners'),
@@ -244,6 +243,7 @@ class ProfileForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
     company = StringField('Company', validators=[Optional(), Length(max=100)])
     phone = StringField('Phone', validators=[Optional(), Length(max=20)])
+    company_logo = FileField('Company Logo', validators=[Optional(), FileAllowed(['png', 'jpg', 'jpeg'], 'Images only!')])
     submit = SubmitField('Update Profile')
 
 class ChangePasswordForm(FlaskForm):

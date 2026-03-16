@@ -96,16 +96,6 @@
                             {{ form.contact_address(class="form-control", rows="2", placeholder="123 Main St, City, Country") }}
                         </div>
                         
-                        <div class="mb-3">
-                            {{ form.contact_image.label(class="form-label") }}
-                            <div class="input-group">
-                                {{ form.contact_image(class="form-control", id="contactImage") }}
-                            </div>
-                            <small class="form-text text-muted">Upload your profile image to display in the QR code center (PNG, JPG only, max 5MB)</small>
-                            <div id="imagePreview" class="mt-2" style="display:none;">
-                                <img id="previewImg" src="" alt="Preview" style="max-width: 150px; max-height: 150px; border-radius: 8px; border: 2px solid #ddd;">
-                            </div>
-                        </div>
                         <hr class="my-4">
                     </div>
                     
@@ -360,13 +350,6 @@
                     <hr class="my-4">
                     
                     <h5 class="mb-3"><i class="bi bi-stars me-2"></i>Advanced Design Options</h5>
-                    
-                    <!-- Logo Upload -->
-                    <div class="mb-3">
-                        {{ form.logo.label(class="form-label") }}
-                        {{ form.logo(class="form-control") }}
-                        <small class="form-text text-muted">Add a logo or icon to the center of your QR code (optional)</small>
-                    </div>
                     
                     <!-- Style Options -->
                     <div class="row">

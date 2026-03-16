@@ -34,6 +34,9 @@ class User(UserMixin, db.Model):
     last_login = db.Column(db.DateTime)
     last_login_ip = db.Column(db.String(45))
     
+    # Branding
+    company_logo = db.Column(db.String(255))  # Filename of uploaded company logo
+    
     # Preferences
     theme = db.Column(db.String(10), default='light')
     notifications_enabled = db.Column(db.Boolean, default=True)
