@@ -651,19 +651,57 @@ def create_app(config_name='default'):
             abort(404)
         return send_file(abs_file_path)
 
+    @app.route('/user-photo/<filename>')
+    def serve_user_photo(filename):
+        """Serve user profile photo files (public, used on contact profile pages)."""
+        from werkzeug.utils import secure_filename
+        safe_filename = secure_filename(filename)
+        # Reject if secure_filename stripped everything (e.g. path traversal input)
+        if not safe_filename:
+            abort(404)
+        # Only serve files that are registered as a user_photo in the users table
+        user = User.query.filter_by(user_photo=safe_filename).first()
+        if not user:
+            abort(404)
+        upload_folder = os.path.abspath(app.config['UPLOAD_FOLDER'])
+        abs_file_path = os.path.abspath(os.path.join(upload_folder, safe_filename))
+        # Ensure the resolved path stays within the upload folder
+        try:
+            common = os.path.commonpath([upload_folder, abs_file_path])
+        except ValueError:
+            abort(404)
+        if common != upload_folder or not os.path.exists(abs_file_path):
+            abort(404)
+        return send_file(abs_file_path)
+
     @app.route('/settings/profile', methods=['GET', 'POST'])
     @login_required
     def settings_profile():
         """Profile settings."""
         form = ProfileForm(obj=current_user)
-        
+
         if form.validate_on_submit():
             current_user.first_name = form.first_name.data
             current_user.last_name = form.last_name.data
             current_user.email = form.email.data
             current_user.company = form.company.data
             current_user.phone = form.phone.data
-            
+
+            # Handle profile color
+            if form.profile_color.data:
+                current_user.profile_color = form.profile_color.data
+
+            # Handle user photo upload
+            old_photo = None
+            if form.user_photo.data:
+                photo_filename, photo_filepath = save_uploaded_image(
+                    form.user_photo.data,
+                    prefix=f'user_photo_{current_user.id}'
+                )
+                if photo_filename:
+                    old_photo = current_user.user_photo
+                    current_user.user_photo = photo_filename
+
             # Handle company logo upload
             old_logo = None
             if form.company_logo.data:
@@ -674,10 +712,19 @@ def create_app(config_name='default'):
                 if logo_filename:
                     old_logo = current_user.company_logo
                     current_user.company_logo = logo_filename
-            
+
             current_user.updated_at = datetime.utcnow()
             db.session.commit()
-            
+
+            # Delete old photo file only after the DB commit succeeds
+            if old_photo:
+                old_path = os.path.join(app.config['UPLOAD_FOLDER'], old_photo)
+                try:
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                except OSError as exc:
+                    app.logger.warning("Could not remove old user photo %s: %s", old_path, exc)
+
             # Delete old logo file only after the DB commit succeeds
             if old_logo:
                 old_path = os.path.join(app.config['UPLOAD_FOLDER'], old_logo)
@@ -686,11 +733,11 @@ def create_app(config_name='default'):
                         os.remove(old_path)
                 except OSError as exc:
                     app.logger.warning("Could not remove old company logo %s: %s", old_path, exc)
-            
+
             log_action('update_profile', 'user', current_user.id, status='success')
             flash('Profile updated successfully!', 'success')
             return redirect(url_for('settings_profile'))
-        
+
         return render_template('dashboard/settings_profile.html', form=form)
     
     @app.route('/settings/account', methods=['GET', 'POST'])

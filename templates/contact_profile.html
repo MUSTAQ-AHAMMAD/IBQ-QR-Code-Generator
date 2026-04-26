@@ -20,10 +20,18 @@
                     
                     <!-- Profile Header -->
                     <div class="mb-4">
-                        <div class="bg-primary bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
-                             style="width: 100px; height: 100px; font-size: 2.5rem;">
+                        {% if contact.user and contact.user.user_photo %}
+                        <div class="mb-3">
+                            <img src="{{ url_for('serve_user_photo', filename=contact.user.user_photo) }}"
+                                 alt="{{ contact.contact_name }}"
+                                 style="width: 120px; height: 120px; object-fit: cover; border: 4px solid var(--profile-color, #667eea); border-radius: 50%;">
+                        </div>
+                        {% else %}
+                        <div class="bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                             style="width: 120px; height: 120px; font-size: 3rem; background: linear-gradient(135deg, var(--profile-color, #667eea) 0%, var(--profile-color-dark, #764ba2) 100%) !important;">
                             <i class="bi bi-person-circle"></i>
                         </div>
+                        {% endif %}
                         <h1 class="h3 mb-1">{{ contact.contact_name }}</h1>
                         {% if contact.contact_title %}
                         <p class="text-muted mb-0">{{ contact.contact_title }}</p>
@@ -35,8 +43,9 @@
                     
                     <!-- Add to Contacts Button -->
                     <div class="d-grid gap-2 mb-4">
-                        <a href="{{ url_for('download_vcard', token=contact.public_token) }}" 
-                           class="btn btn-primary btn-lg">
+                        <a href="{{ url_for('download_vcard', token=contact.public_token) }}"
+                           class="btn btn-lg"
+                           style="background-color: var(--profile-color, #667eea); border-color: var(--profile-color, #667eea); color: white;">
                             <i class="bi bi-person-plus-fill me-2"></i>Add to Contacts
                         </a>
                     </div>
@@ -48,7 +57,7 @@
                         {% if contact.contact_email %}
                         <div class="mb-3">
                             <div class="d-flex align-items-center">
-                                <i class="bi bi-envelope-fill text-primary me-3" style="font-size: 1.25rem;"></i>
+                                <i class="bi bi-envelope-fill me-3" style="font-size: 1.25rem; color: var(--profile-color, #667eea);"></i>
                                 <div>
                                     <small class="text-muted d-block">Email</small>
                                     <a href="mailto:{{ contact.contact_email }}" class="text-decoration-none">
@@ -58,11 +67,11 @@
                             </div>
                         </div>
                         {% endif %}
-                        
+
                         {% if contact.contact_phone %}
                         <div class="mb-3">
                             <div class="d-flex align-items-center">
-                                <i class="bi bi-telephone-fill text-primary me-3" style="font-size: 1.25rem;"></i>
+                                <i class="bi bi-telephone-fill me-3" style="font-size: 1.25rem; color: var(--profile-color, #667eea);"></i>
                                 <div>
                                     <small class="text-muted d-block">Phone</small>
                                     <a href="tel:{{ contact.contact_phone }}" class="text-decoration-none">
@@ -72,11 +81,11 @@
                             </div>
                         </div>
                         {% endif %}
-                        
+
                         {% if contact.contact_website %}
                         <div class="mb-3">
                             <div class="d-flex align-items-center">
-                                <i class="bi bi-globe text-primary me-3" style="font-size: 1.25rem;"></i>
+                                <i class="bi bi-globe me-3" style="font-size: 1.25rem; color: var(--profile-color, #667eea);"></i>
                                 <div>
                                     <small class="text-muted d-block">Website</small>
                                     <a href="{{ contact.contact_website }}" target="_blank" class="text-decoration-none">
@@ -86,11 +95,11 @@
                             </div>
                         </div>
                         {% endif %}
-                        
+
                         {% if contact.contact_address %}
                         <div class="mb-3">
                             <div class="d-flex align-items-start">
-                                <i class="bi bi-geo-alt-fill text-primary me-3" style="font-size: 1.25rem;"></i>
+                                <i class="bi bi-geo-alt-fill me-3" style="font-size: 1.25rem; color: var(--profile-color, #667eea);"></i>
                                 <div>
                                     <small class="text-muted d-block">Address</small>
                                     <span>{{ contact.contact_address }}</span>
@@ -116,9 +125,14 @@
 
 {% block extra_css %}
 <style>
+    :root {
+        --profile-color: {{ contact.user.profile_color if contact.user and contact.user.profile_color else '#667eea' }};
+        --profile-color-dark: {{ contact.user.profile_color if contact.user and contact.user.profile_color else '#764ba2' }};
+    }
+
     body {
-        /* Gradient background - only behind cards, not used for text */
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        /* Gradient background using the user's profile color */
+        background: linear-gradient(135deg, var(--profile-color) 0%, var(--profile-color-dark) 100%);
         min-height: 100vh;
     }
     .card {
