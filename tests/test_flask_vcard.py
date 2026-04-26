@@ -345,3 +345,24 @@ class TestCompanyLogoRoute:
             assert resp.status_code == 404
         finally:
             os.remove(phantom_file)
+
+
+class TestUserPhotoRoute:
+    """Tests for the /user-photo/<filename> route."""
+
+    def test_nonexistent_photo_returns_404(self, client):
+        resp = client.get("/user-photo/does_not_exist.png")
+        assert resp.status_code == 404
+
+    def test_unregistered_filename_returns_404(self, client, app):
+        """A file in the upload folder that is NOT registered as a user_photo
+        must not be accessible via the public route."""
+        upload_dir = app.config["UPLOAD_FOLDER"]
+        phantom_file = os.path.join(upload_dir, "phantom_photo.png")
+        with open(phantom_file, "wb") as f:
+            f.write(b"\x89PNG\r\n\x1a\n")  # minimal PNG header
+        try:
+            resp = client.get("/user-photo/phantom_photo.png")
+            assert resp.status_code == 404
+        finally:
+            os.remove(phantom_file)

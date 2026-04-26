@@ -36,7 +36,9 @@ class User(UserMixin, db.Model):
     
     # Branding
     company_logo = db.Column(db.String(255))  # Filename of uploaded company logo
-    
+    user_photo = db.Column(db.String(255))  # Filename of uploaded user profile photo
+    profile_color = db.Column(db.String(7), default='#667eea')  # Primary color for profile customization
+
     # Preferences
     theme = db.Column(db.String(10), default='light')
     notifications_enabled = db.Column(db.Boolean, default=True)

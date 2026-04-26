@@ -243,7 +243,10 @@ class ProfileForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
     company = StringField('Company', validators=[Optional(), Length(max=100)])
     phone = StringField('Phone', validators=[Optional(), Length(max=20)])
+    user_photo = FileField('Profile Photo', validators=[Optional(), FileAllowed(['png', 'jpg', 'jpeg'], 'Images only!')])
     company_logo = FileField('Company Logo', validators=[Optional(), FileAllowed(['png', 'jpg', 'jpeg'], 'Images only!')])
+    profile_color = StringField('Profile Color', validators=[Optional(), Length(max=7)],
+                                render_kw={"type": "color", "value": "#667eea"})
     submit = SubmitField('Update Profile')
 
 class ChangePasswordForm(FlaskForm):
