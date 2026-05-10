@@ -31,7 +31,10 @@
             <a href="{{ url_for('templates') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint in ['templates', 'create_template'] %}active{% endif %}">
                 <i class="bi bi-palette me-2"></i>Templates
             </a>
-            
+            <a href="{{ url_for('brands') }}" class="list-group-item list-group-item-action bg-dark text-white border-0 {% if request.endpoint in ['brands', 'create_brand', 'edit_brand'] %}active{% endif %}">
+                <i class="bi bi-building me-2"></i>Brands
+            </a>
+
             <div class="list-group-item bg-dark text-white border-0 py-2">
                 <small class="text-muted fw-bold">SETTINGS</small>
             </div>
