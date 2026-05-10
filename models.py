@@ -9,11 +9,46 @@ import secrets
 
 db = SQLAlchemy()
 
+class Brand(db.Model):
+    """Brand model for managing multiple brands per user."""
+
+    __tablename__ = 'brands'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+
+    # Brand information
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    website = db.Column(db.String(200))
+    email = db.Column(db.String(120))
+    phone = db.Column(db.String(20))
+    address = db.Column(db.Text)
+
+    # Branding customization
+    logo = db.Column(db.String(255))  # Filename of uploaded brand logo
+    primary_color = db.Column(db.String(7), default='#667eea')  # Primary brand color
+    secondary_color = db.Column(db.String(7), default='#764ba2')  # Secondary brand color
+
+    # Settings
+    is_default = db.Column(db.Boolean, default=False)  # Default brand for user
+    is_active = db.Column(db.Boolean, default=True)
+
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    qr_codes = db.relationship('QRCode', backref='brand', lazy='dynamic', cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return f'<Brand {self.name}>'
+
 class User(UserMixin, db.Model):
     """User model for authentication and user management."""
-    
+
     __tablename__ = 'users'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
@@ -22,18 +57,18 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String(50))
     company = db.Column(db.String(100))
     phone = db.Column(db.String(20))
-    
+
     # Account status
     is_active = db.Column(db.Boolean, default=True)
     is_verified = db.Column(db.Boolean, default=False)
     email_verified_at = db.Column(db.DateTime)
-    
+
     # Security
     failed_login_attempts = db.Column(db.Integer, default=0)
     account_locked_until = db.Column(db.DateTime)
     last_login = db.Column(db.DateTime)
     last_login_ip = db.Column(db.String(45))
-    
+
     # Branding
     company_logo = db.Column(db.String(255))  # Filename of uploaded company logo
     user_photo = db.Column(db.String(255))  # Filename of uploaded user profile photo
@@ -42,15 +77,16 @@ class User(UserMixin, db.Model):
     # Preferences
     theme = db.Column(db.String(10), default='light')
     notifications_enabled = db.Column(db.Boolean, default=True)
-    
+
     # API
     api_key = db.Column(db.String(64), unique=True)
-    
+
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
     # Relationships
+    brands = db.relationship('Brand', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     qr_codes = db.relationship('QRCode', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     templates = db.relationship('Template', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     audit_logs = db.relationship('AuditLog', backref='user', lazy='dynamic', cascade='all, delete-orphan')
@@ -79,11 +115,12 @@ class User(UserMixin, db.Model):
 
 class QRCode(db.Model):
     """QR Code model for storing generated QR codes."""
-    
+
     __tablename__ = 'qr_codes'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    brand_id = db.Column(db.Integer, db.ForeignKey('brands.id'), nullable=True, index=True)  # Link to brand
     
     # QR Code information
     name = db.Column(db.String(100), nullable=False)

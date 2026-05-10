@@ -71,7 +71,10 @@ class QRCodeGenerateForm(FlaskForm):
         ('product', 'Product'),
         ('other', 'Other')
     ], validators=[Optional()])
-    
+
+    # Brand selection
+    brand_id = SelectField('Brand', coerce=int, validators=[Optional()])
+
     # QR Code Type Selection
     qr_type = SelectField('QR Code Type', choices=[
         ('vcard', 'Business Card / vCard'),
@@ -270,3 +273,18 @@ class AccountSettingsForm(FlaskForm):
     ])
     notifications_enabled = BooleanField('Enable Notifications')
     submit = SubmitField('Save Settings')
+
+class BrandForm(FlaskForm):
+    """Brand management form."""
+    name = StringField('Brand Name', validators=[DataRequired(), Length(max=100)])
+    description = TextAreaField('Description', validators=[Optional()])
+    website = StringField('Website', validators=[Optional(), URL(), Length(max=200)])
+    email = StringField('Email', validators=[Optional(), Email(), Length(max=120)])
+    phone = StringField('Phone', validators=[Optional(), Length(max=20)])
+    address = TextAreaField('Address', validators=[Optional()])
+    logo = FileField('Brand Logo', validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')])
+    primary_color = StringField('Primary Color', validators=[Optional(), Length(max=7)], default='#667eea')
+    secondary_color = StringField('Secondary Color', validators=[Optional(), Length(max=7)], default='#764ba2')
+    is_default = BooleanField('Set as Default Brand')
+    is_active = BooleanField('Active', default=True)
+    submit = SubmitField('Save Brand')
