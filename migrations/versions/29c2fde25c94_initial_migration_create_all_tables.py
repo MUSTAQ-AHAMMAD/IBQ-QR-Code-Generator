@@ -34,6 +34,9 @@ def upgrade():
     sa.Column('account_locked_until', sa.DateTime(), nullable=True),
     sa.Column('last_login', sa.DateTime(), nullable=True),
     sa.Column('last_login_ip', sa.String(length=45), nullable=True),
+    sa.Column('company_logo', sa.String(length=255), nullable=True),
+    sa.Column('user_photo', sa.String(length=255), nullable=True),
+    sa.Column('profile_color', sa.String(length=7), nullable=True),
     sa.Column('theme', sa.String(length=10), nullable=True),
     sa.Column('notifications_enabled', sa.Boolean(), nullable=True),
     sa.Column('api_key', sa.String(length=64), nullable=True),
@@ -45,6 +48,28 @@ def upgrade():
     with op.batch_alter_table('users', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_users_email'), ['email'], unique=True)
         batch_op.create_index(batch_op.f('ix_users_username'), ['username'], unique=True)
+
+    op.create_table('brands',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=100), nullable=False),
+    sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('website', sa.String(length=200), nullable=True),
+    sa.Column('email', sa.String(length=120), nullable=True),
+    sa.Column('phone', sa.String(length=20), nullable=True),
+    sa.Column('address', sa.Text(), nullable=True),
+    sa.Column('logo', sa.String(length=255), nullable=True),
+    sa.Column('primary_color', sa.String(length=7), nullable=True),
+    sa.Column('secondary_color', sa.String(length=7), nullable=True),
+    sa.Column('is_default', sa.Boolean(), nullable=True),
+    sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('brands', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_brands_user_id'), ['user_id'], unique=False)
 
     op.create_table('audit_logs',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -90,6 +115,7 @@ def upgrade():
     op.create_table('qr_codes',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('brand_id', sa.Integer(), nullable=True),
     sa.Column('name', sa.String(length=100), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('category', sa.String(length=50), nullable=True),
@@ -128,11 +154,13 @@ def upgrade():
     sa.Column('view_count', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['brand_id'], ['brands.id'], ),
     sa.ForeignKeyConstraint(['template_id'], ['templates.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('qr_codes', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_qr_codes_brand_id'), ['brand_id'], unique=False)
         batch_op.create_index(batch_op.f('ix_qr_codes_created_at'), ['created_at'], unique=False)
         batch_op.create_index(batch_op.f('ix_qr_codes_public_token'), ['public_token'], unique=True)
         batch_op.create_index(batch_op.f('ix_qr_codes_user_id'), ['user_id'], unique=False)
@@ -146,6 +174,7 @@ def downgrade():
         batch_op.drop_index(batch_op.f('ix_qr_codes_user_id'))
         batch_op.drop_index(batch_op.f('ix_qr_codes_public_token'))
         batch_op.drop_index(batch_op.f('ix_qr_codes_created_at'))
+        batch_op.drop_index(batch_op.f('ix_qr_codes_brand_id'))
 
     op.drop_table('qr_codes')
     with op.batch_alter_table('templates', schema=None) as batch_op:
@@ -157,6 +186,10 @@ def downgrade():
         batch_op.drop_index(batch_op.f('ix_audit_logs_created_at'))
 
     op.drop_table('audit_logs')
+    with op.batch_alter_table('brands', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_brands_user_id'))
+
+    op.drop_table('brands')
     with op.batch_alter_table('users', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_users_username'))
         batch_op.drop_index(batch_op.f('ix_users_email'))
