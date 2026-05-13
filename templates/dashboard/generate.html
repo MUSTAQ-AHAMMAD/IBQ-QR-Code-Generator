@@ -39,19 +39,24 @@
                         {{ form.description.label(class="form-label") }}
                         {{ form.description(class="form-control", rows="2", placeholder="Optional description") }}
                     </div>
-                    
+
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             {{ form.qr_type.label(class="form-label") }}
                             {{ form.qr_type(class="form-select", id="qrType") }}
                             <small class="form-text text-muted">Select the type of QR code to generate</small>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             {{ form.category.label(class="form-label") }}
                             {{ form.category(class="form-select") }}
                         </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.brand_id.label(class="form-label") }}
+                            {{ form.brand_id(class="form-select") }}
+                            <small class="form-text text-muted">Brand for customization</small>
+                        </div>
                     </div>
-                    
+
                     <hr class="my-4">
                     
                     <!-- Business Card / vCard Fields -->

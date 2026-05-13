@@ -1,0 +1,152 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Create Brand - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('brands') }}">Brands</a></li>
+                <li class="breadcrumb-item active">Create Brand</li>
+            </ol>
+        </nav>
+        <h2>Create New Brand</h2>
+        <p class="text-muted">Add a new brand to customize your QR codes</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <h5 class="mb-3">Basic Information</h5>
+
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}{{ error }}{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.website.label(class="form-label") }}
+                            {{ form.website(class="form-control" + (" is-invalid" if form.website.errors else "")) }}
+                            {% if form.website.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.website.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.email.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.phone.label(class="form-label") }}
+                            {{ form.phone(class="form-control") }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.logo.label(class="form-label") }}
+                            {{ form.logo(class="form-control") }}
+                            <small class="form-text text-muted">Upload a logo for this brand (JPG, PNG, GIF)</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.address.label(class="form-label") }}
+                        {{ form.address(class="form-control", rows="2") }}
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="mb-3">Brand Colors</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.primary_color.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.primary_color(class="form-control", type="color") }}
+                                <input type="text" class="form-control" value="{{ form.primary_color.data or '#667eea' }}" readonly>
+                            </div>
+                            <small class="form-text text-muted">Used for profile background and accents</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.secondary_color.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.secondary_color(class="form-control", type="color") }}
+                                <input type="text" class="form-control" value="{{ form.secondary_color.data or '#764ba2' }}" readonly>
+                            </div>
+                            <small class="form-text text-muted">Used for gradient effects</small>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="mb-3">Settings</h5>
+
+                    <div class="form-check mb-3">
+                        {{ form.is_default(class="form-check-input") }}
+                        {{ form.is_default.label(class="form-check-label") }}
+                        <small class="form-text text-muted d-block">Default brand will be auto-selected when creating QR codes</small>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        {{ form.is_active(class="form-check-input", checked="checked") }}
+                        {{ form.is_active.label(class="form-check-label") }}
+                        <small class="form-text text-muted d-block">Inactive brands won't appear in QR code generation</small>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('brands') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>About Brands
+                </h5>
+                <p class="card-text">
+                    Brands allow you to organize and customize your QR codes with specific branding:
+                </p>
+                <ul class="small">
+                    <li>Custom logo and colors</li>
+                    <li>Brand-specific contact information</li>
+                    <li>Consistent appearance across QR codes</li>
+                    <li>Multiple brands per account</li>
+                </ul>
+                <p class="card-text small text-muted">
+                    When someone scans a QR code, they'll see the brand's customization in the contact profile page.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

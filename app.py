@@ -9,10 +9,10 @@ from flask_wtf.csrf import generate_csrf
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from config import config
-from models import db, User, QRCode, Template, AuditLog
+from models import db, User, QRCode, Template, AuditLog, Brand
 from forms import (LoginForm, RegistrationForm, QRCodeGenerateForm, QRCodeEditForm,
                    TemplateForm, ProfileForm, ChangePasswordForm, AccountSettingsForm,
-                   PasswordResetRequestForm, PasswordResetForm)
+                   PasswordResetRequestForm, PasswordResetForm, BrandForm)
 from utils import (generate_vcard, create_qr_code, create_qr_code_svg, save_qr_code, 
                    generate_filename, get_qr_code_base64, generate_qr_data)
 from sqlalchemy import desc, func
@@ -321,12 +321,21 @@ def create_app(config_name='default'):
     def generate_qr():
         """Generate QR code page."""
         form = QRCodeGenerateForm()
-        
+
         # Populate template choices
         templates = Template.query.filter(
             (Template.user_id == current_user.id) | (Template.is_public == True)
         ).all()
         form.template_id.choices = [(0, 'No Template')] + [(t.id, t.name) for t in templates]
+
+        # Populate brand choices
+        brands = Brand.query.filter_by(user_id=current_user.id, is_active=True).all()
+        default_brand = Brand.query.filter_by(user_id=current_user.id, is_default=True).first()
+        form.brand_id.choices = [(0, 'No Brand')] + [(b.id, b.name + (' (Default)' if b.is_default else '')) for b in brands]
+
+        # Set default brand if available
+        if default_brand and not form.brand_id.data:
+            form.brand_id.data = default_brand.id
         
         if form.validate_on_submit():
             try:
@@ -375,6 +384,7 @@ def create_app(config_name='default'):
                 # Create QR code record
                 qr_code = QRCode(
                     user_id=current_user.id,
+                    brand_id=form.brand_id.data if form.brand_id.data else None,
                     name=form.name.data,
                     description=form.description.data,
                     category=form.category.data,
@@ -795,7 +805,183 @@ def create_app(config_name='default'):
         log_action('generate_api_key', 'user', current_user.id, status='success')
         flash('New API key generated successfully!', 'success')
         return redirect(url_for('settings_api_key'))
-    
+
+    # Brand management routes
+    @app.route('/brands')
+    @login_required
+    def brands():
+        """Brand management page."""
+        user_brands = Brand.query.filter_by(user_id=current_user.id).order_by(desc(Brand.created_at)).all()
+        return render_template('dashboard/brands.html', brands=user_brands)
+
+    @app.route('/brands/create', methods=['GET', 'POST'])
+    @login_required
+    def create_brand():
+        """Create new brand."""
+        form = BrandForm()
+
+        if form.validate_on_submit():
+            # Handle logo upload
+            logo_filename = None
+            if form.logo.data:
+                logo_filename, _ = save_uploaded_image(
+                    form.logo.data,
+                    prefix=f'brand_logo_{current_user.id}'
+                )
+
+            # If this is the default brand, unset any existing default
+            if form.is_default.data:
+                Brand.query.filter_by(user_id=current_user.id, is_default=True).update({'is_default': False})
+
+            brand = Brand(
+                user_id=current_user.id,
+                name=form.name.data,
+                description=form.description.data,
+                website=form.website.data,
+                email=form.email.data,
+                phone=form.phone.data,
+                address=form.address.data,
+                logo=logo_filename,
+                primary_color=form.primary_color.data or '#667eea',
+                secondary_color=form.secondary_color.data or '#764ba2',
+                is_default=form.is_default.data,
+                is_active=form.is_active.data
+            )
+
+            db.session.add(brand)
+            db.session.commit()
+
+            log_action('create_brand', 'brand', brand.id, status='success')
+            flash('Brand created successfully!', 'success')
+            return redirect(url_for('brands'))
+
+        return render_template('dashboard/create_brand.html', form=form)
+
+    @app.route('/brands/<int:brand_id>/edit', methods=['GET', 'POST'])
+    @login_required
+    def edit_brand(brand_id):
+        """Edit brand."""
+        brand = Brand.query.filter_by(id=brand_id, user_id=current_user.id).first_or_404()
+        form = BrandForm(obj=brand)
+
+        if form.validate_on_submit():
+            # Handle logo upload
+            old_logo = None
+            if form.logo.data:
+                logo_filename, _ = save_uploaded_image(
+                    form.logo.data,
+                    prefix=f'brand_logo_{current_user.id}'
+                )
+                if logo_filename:
+                    old_logo = brand.logo
+                    brand.logo = logo_filename
+
+            # If this is being set as default, unset any other default
+            if form.is_default.data and not brand.is_default:
+                Brand.query.filter_by(user_id=current_user.id, is_default=True).update({'is_default': False})
+
+            brand.name = form.name.data
+            brand.description = form.description.data
+            brand.website = form.website.data
+            brand.email = form.email.data
+            brand.phone = form.phone.data
+            brand.address = form.address.data
+            brand.primary_color = form.primary_color.data or '#667eea'
+            brand.secondary_color = form.secondary_color.data or '#764ba2'
+            brand.is_default = form.is_default.data
+            brand.is_active = form.is_active.data
+            brand.updated_at = datetime.utcnow()
+
+            db.session.commit()
+
+            # Delete old logo file if a new one was uploaded
+            if old_logo:
+                old_path = os.path.join(app.config['UPLOAD_FOLDER'], old_logo)
+                try:
+                    if os.path.exists(old_path):
+                        os.remove(old_path)
+                except OSError as exc:
+                    app.logger.warning("Could not remove old brand logo %s: %s", old_path, exc)
+
+            log_action('edit_brand', 'brand', brand.id, status='success')
+            flash('Brand updated successfully!', 'success')
+            return redirect(url_for('brands'))
+
+        return render_template('dashboard/edit_brand.html', form=form, brand=brand)
+
+    @app.route('/brands/<int:brand_id>/delete', methods=['POST'])
+    @login_required
+    def delete_brand(brand_id):
+        """Delete brand."""
+        brand = Brand.query.filter_by(id=brand_id, user_id=current_user.id).first_or_404()
+
+        # Prevent deletion if this is the only brand
+        brand_count = Brand.query.filter_by(user_id=current_user.id).count()
+        if brand_count <= 1:
+            flash('Cannot delete your only brand. Create another brand first.', 'danger')
+            return redirect(url_for('brands'))
+
+        # Check if brand has QR codes
+        qr_code_count = QRCode.query.filter_by(brand_id=brand.id).count()
+        if qr_code_count > 0:
+            flash(f'Cannot delete brand with {qr_code_count} associated QR codes. Please reassign or delete them first.', 'danger')
+            return redirect(url_for('brands'))
+
+        # Delete logo file
+        if brand.logo:
+            logo_path = os.path.join(app.config['UPLOAD_FOLDER'], brand.logo)
+            try:
+                if os.path.exists(logo_path):
+                    os.remove(logo_path)
+            except OSError as exc:
+                app.logger.warning("Could not remove brand logo %s: %s", logo_path, exc)
+
+        db.session.delete(brand)
+        db.session.commit()
+
+        log_action('delete_brand', 'brand', brand_id, status='success')
+        flash('Brand deleted successfully!', 'success')
+        return redirect(url_for('brands'))
+
+    @app.route('/brands/<int:brand_id>/set-default', methods=['POST'])
+    @login_required
+    def set_default_brand(brand_id):
+        """Set brand as default."""
+        brand = Brand.query.filter_by(id=brand_id, user_id=current_user.id).first_or_404()
+
+        # Unset any existing default
+        Brand.query.filter_by(user_id=current_user.id, is_default=True).update({'is_default': False})
+
+        # Set this brand as default
+        brand.is_default = True
+        db.session.commit()
+
+        log_action('set_default_brand', 'brand', brand.id, status='success')
+        flash('Default brand updated successfully!', 'success')
+        return redirect(url_for('brands'))
+
+    @app.route('/brand-logo/<filename>')
+    def serve_brand_logo(filename):
+        """Serve brand logo files (public, used on contact profile pages)."""
+        from werkzeug.utils import secure_filename
+        safe_filename = secure_filename(filename)
+        if not safe_filename:
+            abort(404)
+        # Only serve files that are registered as a logo in the brands table
+        brand = Brand.query.filter_by(logo=safe_filename).first()
+        if not brand:
+            abort(404)
+        upload_folder = os.path.abspath(app.config['UPLOAD_FOLDER'])
+        abs_file_path = os.path.abspath(os.path.join(upload_folder, safe_filename))
+        # Ensure the resolved path stays within the upload folder
+        try:
+            common = os.path.commonpath([upload_folder, abs_file_path])
+        except ValueError:
+            abort(404)
+        if common != upload_folder or not os.path.exists(abs_file_path):
+            abort(404)
+        return send_file(abs_file_path)
+
     @app.route('/help')
     @login_required
     def help_page():

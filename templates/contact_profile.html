@@ -9,8 +9,14 @@
             <!-- Contact Card -->
             <div class="card shadow-lg border-0">
                 <div class="card-body p-5 text-center">
-                    <!-- Company Logo -->
-                    {% if contact.user and contact.user.company_logo %}
+                    <!-- Brand Logo -->
+                    {% if contact.brand and contact.brand.logo %}
+                    <div class="mb-4">
+                        <img src="{{ url_for('serve_brand_logo', filename=contact.brand.logo) }}"
+                             alt="{{ contact.brand.name }} Logo"
+                             style="max-height: 80px; max-width: 220px; object-fit: contain;">
+                    </div>
+                    {% elif contact.user and contact.user.company_logo %}
                     <div class="mb-4">
                         <img src="{{ url_for('serve_company_logo', filename=contact.user.company_logo) }}"
                              alt="{{ contact.user.company or 'Company' }} Logo"
@@ -126,12 +132,20 @@
 {% block extra_css %}
 <style>
     :root {
-        --profile-color: {{ contact.user.profile_color if contact.user and contact.user.profile_color else '#667eea' }};
-        --profile-color-dark: {{ contact.user.profile_color if contact.user and contact.user.profile_color else '#764ba2' }};
+        {% if contact.brand %}
+        --profile-color: {{ contact.brand.primary_color }};
+        --profile-color-dark: {{ contact.brand.secondary_color }};
+        {% elif contact.user and contact.user.profile_color %}
+        --profile-color: {{ contact.user.profile_color }};
+        --profile-color-dark: {{ contact.user.profile_color }};
+        {% else %}
+        --profile-color: #667eea;
+        --profile-color-dark: #764ba2;
+        {% endif %}
     }
 
     body {
-        /* Gradient background using the user's profile color */
+        /* Gradient background using the brand's colors */
         background: linear-gradient(135deg, var(--profile-color) 0%, var(--profile-color-dark) 100%);
         min-height: 100vh;
     }
