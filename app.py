@@ -5,6 +5,7 @@ import os
 import secrets
 from flask import Flask, render_template, redirect, url_for, flash, request, send_file, jsonify, Response, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_migrate import Migrate
 from flask_wtf.csrf import generate_csrf
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
@@ -28,7 +29,8 @@ def create_app(config_name='default'):
     
     # Initialize extensions
     db.init_app(app)
-    
+    migrate = Migrate(app, db)
+
     # Initialize Flask-Login
     login_manager = LoginManager()
     login_manager.init_app(app)
