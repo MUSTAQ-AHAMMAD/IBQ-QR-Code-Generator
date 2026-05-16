@@ -1,0 +1,169 @@
+name: QA Automation & Testing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  qa-tests:
+    name: QA Automation Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-qa.txt
+
+      - name: Install Playwright browsers
+        run: |
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Create required directories
+        run: |
+          mkdir -p qa-reports/{screenshots,errors,performance,accessibility}
+          mkdir -p uploads logs
+
+      - name: Initialize database
+        run: |
+          python init_db.py || true
+
+      - name: Start Flask application
+        run: |
+          python app.py &
+          echo $! > app.pid
+          sleep 15
+
+      - name: Check application health
+        run: |
+          curl -f http://127.0.0.1:5000/ || (cat logs/*.log && exit 1)
+
+      - name: Run E2E tests
+        run: |
+          pytest tests/e2e/ -v --html=qa-reports/e2e-report.html --self-contained-html
+        continue-on-error: true
+
+      - name: Capture screenshots
+        run: |
+          python tests/automated_screenshots.py
+        continue-on-error: true
+
+      - name: Run accessibility tests
+        run: |
+          python tests/accessibility_testing.py
+        continue-on-error: true
+
+      - name: Run visual QA tests
+        run: |
+          python tests/visual_qa_testing.py
+        continue-on-error: true
+
+      - name: Generate launch audit
+        run: |
+          python tests/generate_launch_audit.py
+
+      - name: Stop Flask application
+        if: always()
+        run: |
+          if [ -f app.pid ]; then
+            kill $(cat app.pid) || true
+          fi
+
+      - name: Upload QA reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: qa-reports
+          path: qa-reports/
+          retention-days: 30
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: screenshots
+          path: qa-reports/screenshots/
+          retention-days: 30
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const auditReport = fs.readFileSync('qa-reports/final-launch-audit.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '## QA Automation Results\n\n' + auditReport.substring(0, 60000)
+            });
+
+  visual-regression:
+    name: Visual Regression Testing
+    runs-on: ubuntu-latest
+    needs: qa-tests
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download screenshots from PR
+        uses: actions/download-artifact@v3
+        with:
+          name: screenshots
+          path: pr-screenshots/
+
+      - name: Checkout base branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.base_ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-qa.txt
+          playwright install chromium
+
+      - name: Start application and capture base screenshots
+        run: |
+          python app.py &
+          sleep 15
+          python tests/automated_screenshots.py
+
+      - name: Compare screenshots
+        run: |
+          python tests/compare_screenshots.py pr-screenshots/ qa-reports/screenshots/
+        continue-on-error: true
+
+      - name: Upload comparison results
+        uses: actions/upload-artifact@v3
+        with:
+          name: visual-regression-report
+          path: qa-reports/visual-regression/
