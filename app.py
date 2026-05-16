@@ -14,9 +14,20 @@ from models import db, User, QRCode, Template, AuditLog, Brand
 from forms import (LoginForm, RegistrationForm, QRCodeGenerateForm, QRCodeEditForm,
                    TemplateForm, ProfileForm, ChangePasswordForm, AccountSettingsForm,
                    PasswordResetRequestForm, PasswordResetForm, BrandForm)
-from utils import (generate_vcard, create_qr_code, create_qr_code_svg, save_qr_code, 
+from utils import (generate_vcard, create_qr_code, create_qr_code_svg, save_qr_code,
                    generate_filename, get_qr_code_base64, generate_qr_data)
 from sqlalchemy import desc, func
+
+# Import production middleware
+try:
+    from middleware import (
+        setup_logging, setup_sentry, setup_security_headers,
+        setup_rate_limiting, setup_caching, health_check_route,
+        readiness_check_route, metrics_route, request_id_middleware
+    )
+    MIDDLEWARE_AVAILABLE = True
+except ImportError:
+    MIDDLEWARE_AVAILABLE = False
 
 # Constants
 MAX_VCARD_FILENAME_LENGTH = 50
@@ -26,10 +37,34 @@ def create_app(config_name='default'):
     """Application factory."""
     app = Flask(__name__)
     app.config.from_object(config[config_name])
-    
+
     # Initialize extensions
     db.init_app(app)
     migrate = Migrate(app, db)
+
+    # Production middleware setup
+    if MIDDLEWARE_AVAILABLE:
+        # Setup logging
+        setup_logging(app)
+
+        # Setup error tracking
+        setup_sentry(app)
+
+        # Setup security headers
+        setup_security_headers(app)
+
+        # Setup request ID middleware
+        request_id_middleware(app)
+
+        # Setup rate limiting
+        limiter = setup_rate_limiting(app)
+        if limiter:
+            app.limiter = limiter
+
+        # Setup caching
+        cache = setup_caching(app)
+        if cache:
+            app.cache = cache
 
     # Initialize Flask-Login
     login_manager = LoginManager()
@@ -37,13 +72,14 @@ def create_app(config_name='default'):
     login_manager.login_view = 'login'
     login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'info'
-    
+
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
-    
-    # Create upload folder
+
+    # Create necessary directories
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    os.makedirs('logs', exist_ok=True)
     
     # Create database tables
     with app.app_context():
@@ -1007,7 +1043,13 @@ def create_app(config_name='default'):
     def contact():
         """Contact support page."""
         return render_template('dashboard/contact.html')
-    
+
+    # Production health check routes
+    if MIDDLEWARE_AVAILABLE and app.config.get('HEALTH_CHECK_ENABLED'):
+        health_check_route(app, db)
+        readiness_check_route(app, db)
+        metrics_route(app, db)
+
     return app
 
 if __name__ == '__main__':

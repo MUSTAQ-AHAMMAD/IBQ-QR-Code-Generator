@@ -128,7 +128,31 @@ Thumbs.db
 
 # Application specific
 uploads/
+!uploads/.gitkeep
 logs/
+!logs/.gitkeep
 *.log
 temp/
 tmp/
+backups/
+!backups/.gitkeep
+
+# Docker volumes
+postgres_data/
+redis_data/
+
+# SSL certificates (don't commit private keys)
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+
+# Production environment files
+.env.production.local
+docker-compose.prod.yml
+
+# Gunicorn
+gunicorn.pid
+
+# Database backups
+*.sql
+*.sql.gz
