@@ -74,6 +74,92 @@ This error typically occurs due to missing Python dependencies (Flask and relate
 2. Reinstall Pillow: `pip install --upgrade Pillow>=11.0.0`
 3. Restart the application
 
+#### Issue: ImportError: cannot import name '_imaging' from 'PIL' (Windows)
+**Problem:** When trying to import PIL/Pillow, you get an error like:
+```
+ImportError: cannot import name '_imaging' from 'PIL' (C:\path\to\venv\Lib\site-packages\PIL\__init__.py)
+```
+
+**Root Cause:** This error indicates a corrupted Pillow installation. The `_imaging` module is a compiled C extension that's essential for Pillow to work. This commonly occurs on Windows when:
+- Pillow was installed but the binary components weren't properly compiled/copied
+- Pip's cache contains corrupted files
+- There's a conflict with another package or Python installation
+- Antivirus software interfered with the installation
+
+**Solution (Windows Users):**
+
+**Method 1: Clean reinstall with cache clearing (Recommended)**
+```bash
+# Activate your virtual environment
+source venv/Scripts/activate  # Git Bash/MINGW64
+# OR
+venv\Scripts\activate  # Command Prompt
+
+# Uninstall Pillow completely
+pip uninstall -y Pillow
+
+# Clear pip cache (important!)
+pip cache purge
+
+# Reinstall with no cache
+pip install --no-cache-dir "Pillow>=11.0.0"
+
+# Verify installation
+python -c "from PIL import Image; print('PIL import successful, version:', Image.__version__)"
+```
+
+**Method 2: Force reinstall from wheel**
+```bash
+# Uninstall existing Pillow
+pip uninstall -y Pillow
+
+# Install with force-reinstall and no-cache flags
+pip install --force-reinstall --no-cache-dir "Pillow>=11.0.0"
+
+# Verify
+python -c "from PIL import Image; print('Success!')"
+```
+
+**Method 3: Fresh virtual environment (if above methods fail)**
+```bash
+# Deactivate current environment
+deactivate
+
+# Remove corrupted virtual environment
+rm -rf venv  # Git Bash
+# OR
+rmdir /s /q venv  # Command Prompt
+
+# Create fresh virtual environment
+python -m venv venv
+
+# Activate new environment
+source venv/Scripts/activate  # Git Bash
+# OR
+venv\Scripts\activate  # Command Prompt
+
+# Upgrade pip first
+python -m pip install --upgrade pip
+
+# Install all requirements fresh
+pip install --no-cache-dir -r requirements.txt
+
+# Verify
+python -c "from PIL import Image; print('Success! PIL version:', Image.__version__)"
+```
+
+**Method 4: Use pre-built wheel (alternative)**
+```bash
+# Download and install from PyPI directly
+pip install --no-cache-dir --force-reinstall --upgrade Pillow
+```
+
+**Additional Windows-specific checks:**
+- Ensure no antivirus is blocking pip installations (temporarily disable if needed)
+- Run Git Bash or Command Prompt as Administrator if permissions are an issue
+- Check that you have Visual C++ Redistributables installed (required for compiled extensions)
+- Verify Python version is 64-bit if you're on a 64-bit system: `python -c "import platform; print(platform.architecture())"`
+
 #### Issue: "No module named 'werkzeug'" or similar
 **Solution:** Some dependencies are missing. Run `pip install -r requirements.txt` again.
 
