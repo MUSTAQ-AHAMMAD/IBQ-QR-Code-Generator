@@ -1138,13 +1138,14 @@ def create_app(config_name='default'):
     @app.route('/api/preview-qr', methods=['POST'])
     @login_required
     def preview_qr():
-        """Generate QR code preview without saving to database."""
+        """Generate QR code preview with optional database save."""
         try:
             data = request.get_json()
 
             # Get QR type and form data
             qr_type = data.get('qr_type', 'url')
             form_data = data.get('form_data', {})
+            save_to_db = data.get('save_to_db', False)
 
             # Generate QR data based on type
             qr_data = generate_qr_data(qr_type, form_data)
@@ -1170,14 +1171,114 @@ def create_app(config_name='default'):
             # Generate QR code image
             qr_img = create_qr_code(qr_data, settings)
 
-            # Convert to base64
+            # Convert to base64 for preview
             img_base64 = get_qr_code_base64(qr_img)
 
-            return jsonify({
+            response_data = {
                 'success': True,
                 'image': img_base64,
                 'data': qr_data
-            })
+            }
+
+            # Save to database if requested
+            if save_to_db:
+                # Generate public token
+                public_token = secrets.token_urlsafe(PUBLIC_TOKEN_LENGTH)
+
+                # Create QR code record
+                qr_code = QRCode(
+                    user_id=current_user.id,
+                    brand_id=data.get('brand_id') if data.get('brand_id') else None,
+                    name=form_data.get('name') or f"QR Code {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
+                    description=form_data.get('description'),
+                    category=form_data.get('category'),
+                    contact_name=form_data.get('contact_name'),
+                    contact_email=form_data.get('contact_email'),
+                    contact_phone=form_data.get('contact_phone'),
+                    contact_website=form_data.get('contact_website'),
+                    contact_company=form_data.get('contact_company'),
+                    contact_title=form_data.get('contact_title'),
+                    contact_address=form_data.get('contact_address'),
+                    qr_data=qr_data,
+                    qr_type=qr_type,
+                    public_token=public_token,
+                    template_id=data.get('template_id') if data.get('template_id') else None,
+                    # Settings
+                    size=settings['size'],
+                    foreground_color=settings['foreground_color'],
+                    background_color=settings['background_color'],
+                    error_correction=settings['error_correction'],
+                    border=settings['border'],
+                    qr_style=settings['qr_style'],
+                    gradient_enabled=settings['gradient_enabled'],
+                    gradient_color=settings['gradient_color'],
+                    gradient_type=settings['gradient_type'],
+                    frame_style=settings['frame_style'],
+                    frame_text=settings['frame_text'],
+                    frame_color=settings['frame_color'],
+                    eye_style=settings['eye_style'],
+                    data_style=settings['data_style'],
+                    file_format=data.get('file_format', 'png')
+                )
+
+                # Save QR code to file
+                file_format = data.get('file_format', 'png')
+                upload_folder = app.config['UPLOAD_FOLDER']
+                os.makedirs(upload_folder, exist_ok=True)
+
+                # Generate unique filename
+                timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+                safe_name = ''.join(c for c in (form_data.get('name') or 'qrcode') if c.isalnum() or c in (' ', '-', '_')).strip()
+                safe_name = safe_name.replace(' ', '_')[:50]
+                filename = f"qr_{safe_name}_{timestamp}.{file_format}"
+                file_path = os.path.join(upload_folder, filename)
+
+                # Save based on format
+                if file_format == 'png':
+                    qr_img.save(file_path, 'PNG')
+                elif file_format == 'svg':
+                    # For SVG, regenerate with SVG image factory
+                    qr_svg = qrcode.QRCode(
+                        version=1,
+                        error_correction=qrcode.constants.ERROR_CORRECT_H,
+                        box_size=10,
+                        border=settings['border']
+                    )
+                    qr_svg.add_data(qr_data)
+                    qr_svg.make(fit=True)
+                    img = qr_svg.make_image(image_factory=SvgPathImage, fill_color=settings['foreground_color'], back_color=settings['background_color'])
+                    with open(file_path, 'wb') as f:
+                        img.save(f)
+                elif file_format == 'pdf':
+                    # Convert to PDF
+                    from reportlab.pdfgen import canvas
+                    from reportlab.lib.pagesizes import letter
+                    from reportlab.lib.utils import ImageReader
+
+                    c = canvas.Canvas(file_path, pagesize=letter)
+                    img_reader = ImageReader(qr_img)
+                    c.drawImage(img_reader, 100, 500, width=settings['size'], height=settings['size'])
+                    c.save()
+
+                # Update QR code record with file info
+                qr_code.filename = filename
+                qr_code.file_path = file_path
+                qr_code.file_size = os.path.getsize(file_path)
+
+                # Save to database
+                db.session.add(qr_code)
+                db.session.commit()
+
+                # Log action
+                log_action('qr_code_saved_from_preview', 'qr_code', qr_code.id, status='success')
+
+                # Add database info to response
+                response_data['saved'] = True
+                response_data['qr_id'] = qr_code.id
+                response_data['download_url'] = url_for('download_qr_code', qr_id=qr_code.id, _external=False)
+                response_data['view_url'] = url_for('view_qr_code', qr_id=qr_code.id, _external=False)
+
+            return jsonify(response_data)
 
         except Exception as e:
             return jsonify({

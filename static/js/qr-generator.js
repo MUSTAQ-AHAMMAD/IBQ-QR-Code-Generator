@@ -251,8 +251,11 @@
         // Hide progress bar
         hideProgress();
 
-        // Show download hint
-        showToast('QR Code generated! Submit form to save and download.', 'info');
+        // Show save button
+        const saveSection = document.getElementById('quickSaveSection');
+        if (saveSection) {
+            saveSection.style.display = 'block';
+        }
     }
 
     function showPlaceholder(message) {
@@ -305,10 +308,118 @@
         }
     }
 
+    async function saveToDatabase() {
+        const form = document.getElementById('qrCodeForm');
+        if (!form) return;
+
+        // Show loading
+        const saveButton = document.getElementById('quickSaveButton');
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Saving...';
+        }
+
+        try {
+            // Collect form data
+            const formData = collectFormData(form);
+
+            // Validate
+            if (!validateFormData(formData)) {
+                throw new Error('Please fill in all required fields');
+            }
+
+            // Prepare request data
+            const requestData = {
+                qr_type: formData.qr_type,
+                form_data: formData,
+                size: parseInt(formData.size) || 300,
+                foreground_color: formData.foreground_color || '#000000',
+                background_color: formData.background_color || '#FFFFFF',
+                error_correction: formData.error_correction || 'H',
+                border: parseInt(formData.border) || 4,
+                qr_style: formData.qr_style || 'square',
+                gradient_enabled: formData.gradient_enabled === 'y',
+                gradient_color: formData.gradient_color,
+                gradient_type: formData.gradient_type || 'linear',
+                frame_style: formData.frame_style || 'none',
+                frame_text: formData.frame_text,
+                frame_color: formData.frame_color || '#000000',
+                eye_style: formData.eye_style || 'square',
+                data_style: formData.data_style || 'square',
+                brand_id: formData.brand_id,
+                template_id: formData.template_id,
+                file_format: formData.file_format || 'png',
+                save_to_db: true  // Flag to save to database
+            };
+
+            // Get CSRF token
+            const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+
+            // Make API request
+            const response = await fetch('/api/preview-qr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to save QR code');
+            }
+
+            const result = await response.json();
+
+            if (result.success && result.saved) {
+                showToast('QR Code saved successfully!', 'success');
+
+                // Update UI to show saved state
+                const saveSection = document.getElementById('quickSaveSection');
+                if (saveSection) {
+                    saveSection.innerHTML = `
+                        <div class="alert alert-success" role="alert">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>Saved!</strong> QR Code #${result.qr_id}
+                        </div>
+                        <div class="d-grid gap-2">
+                            <a href="${result.view_url}" class="btn btn-primary">
+                                <i class="bi bi-eye me-2"></i>View QR Code
+                            </a>
+                            <a href="${result.download_url}" class="btn btn-success">
+                                <i class="bi bi-download me-2"></i>Download
+                            </a>
+                            <button type="button" class="btn btn-outline-secondary" onclick="location.reload()">
+                                <i class="bi bi-plus-circle me-2"></i>Create New
+                            </button>
+                        </div>
+                    `;
+                }
+
+                // Log action
+                log_action('qr_code_saved_from_preview', 'qr_code', result.qr_id, 'success');
+            } else {
+                throw new Error('Failed to save QR code');
+            }
+
+        } catch (error) {
+            console.error('Save error:', error);
+            showToast(error.message, 'error');
+
+            // Restore button
+            if (saveButton) {
+                saveButton.disabled = false;
+                saveButton.innerHTML = '<i class="bi bi-save me-2"></i>Save to Database';
+            }
+        }
+    }
+
     // Export functions for use in other scripts if needed
     window.qrGenerator = {
         generatePreview,
-        showPlaceholder
+        showPlaceholder,
+        saveToDatabase
     };
 
 })();
