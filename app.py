@@ -10,7 +10,7 @@ from flask_wtf.csrf import generate_csrf
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from config import config
-from models import db, User, QRCode, Template, AuditLog, Brand
+from models import db, User, QRCode, Template, AuditLog, Brand, Organization, Employee, VCardProfile, QRScan, Theme, Asset
 from forms import (LoginForm, RegistrationForm, QRCodeGenerateForm, QRCodeEditForm,
                    TemplateForm, ProfileForm, ChangePasswordForm, AccountSettingsForm,
                    PasswordResetRequestForm, PasswordResetForm, BrandForm)
@@ -141,11 +141,27 @@ def create_app(config_name='default'):
     # Context processor
     @app.context_processor
     def utility_processor():
+        """Inject utility functions and variables into templates."""
+        from theme_service import ThemeService
+
+        # Get brand theming
+        theme_service = ThemeService()
+        brand = theme_service.get_brand_from_request()
+        theme = None
+
+        if brand and brand.qr_style_preset:
+            theme = theme_service.get_theme_preset_by_slug(brand.qr_style_preset)
+
         return {
             'app_name': app.config['APP_NAME'],
             'app_version': app.config['APP_VERSION'],
             'now': datetime.utcnow,
-            'csrf_token': generate_csrf
+            'csrf_token': generate_csrf,
+            # Brand theming
+            'current_brand': brand,
+            'current_theme': theme,
+            'brand_css': theme_service.generate_css_variables(brand, theme),
+            'brand_theme_json': theme_service.generate_theme_json(brand, theme)
         }
     
     # Error handlers

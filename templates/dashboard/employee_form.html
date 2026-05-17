@@ -1,0 +1,256 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}{{ 'Edit Employee' if employee else 'Add Employee' }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="mb-4">
+                <h1 class="h3 mb-0">{{ '✏️ Edit Employee' if employee else '➕ Add Employee' }}</h1>
+                <p class="text-muted">{{ 'Update employee profile and vCard information' if employee else 'Create a new employee profile with vCard' }}</p>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {{ form.hidden_tag() }}
+
+                <!-- Basic Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Basic Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.employee_id.label(class="form-label") }}
+                                {{ form.employee_id(class="form-control", placeholder="EMP001") }}
+                                <small class="text-muted">Optional company employee ID</small>
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.designation.label(class="form-label") }}
+                                {{ form.designation(class="form-control is-required", placeholder="Software Engineer", required=true) }}
+                                {% if form.designation.errors %}
+                                <div class="invalid-feedback d-block">{{ form.designation.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.department.label(class="form-label") }}
+                                {{ form.department(class="form-control", placeholder="Engineering") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.brand_id.label(class="form-label") }}
+                                {{ form.brand_id(class="form-select") }}
+                                <small class="text-muted">Associate with a brand</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Profile</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.profile_image.label(class="form-label") }}
+                            {% if employee and employee.profile_image %}
+                            <div class="mb-2">
+                                <img src="{{ url_for('static', filename='uploads/profiles/' + employee.profile_image) }}"
+                                     class="rounded-circle" width="80" height="80" alt="Current profile">
+                                <small class="text-muted d-block">Current photo</small>
+                            </div>
+                            {% endif %}
+                            {{ form.profile_image(class="form-control") }}
+                            <small class="text-muted">Upload a professional profile photo (JPG, PNG, GIF)</small>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.bio.label(class="form-label") }}
+                            {{ form.bio(class="form-control", rows=3, placeholder="Brief professional bio...") }}
+                            <small class="text-muted">Max 500 characters</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Contact Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.work_email.label(class="form-label") }}
+                                {{ form.work_email(class="form-control", placeholder="john.doe@company.com") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.work_phone.label(class="form-label") }}
+                                {{ form.work_phone(class="form-control", placeholder="+1 234 567 8900") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.mobile.label(class="form-label") }}
+                                {{ form.mobile(class="form-control", placeholder="+1 234 567 8901") }}
+                            </div>
+                            <div class="col-12">
+                                {{ form.office_address.label(class="form-label") }}
+                                {{ form.office_address(class="form-control", rows=2, placeholder="123 Business St, Suite 100, City, State 12345") }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Links -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Social Links</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-linkedin text-primary"></i> LinkedIn URL
+                                </label>
+                                {{ form.linkedin_url(class="form-control", placeholder="https://linkedin.com/in/username") }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-twitter text-info"></i> Twitter URL
+                                </label>
+                                {{ form.twitter_url(class="form-control", placeholder="https://twitter.com/username") }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-facebook text-primary"></i> Facebook URL
+                                </label>
+                                {{ form.facebook_url(class="form-control", placeholder="https://facebook.com/username") }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-instagram text-danger"></i> Instagram URL
+                                </label>
+                                {{ form.instagram_url(class="form-control", placeholder="https://instagram.com/username") }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-github text-dark"></i> GitHub URL
+                                </label>
+                                {{ form.github_url(class="form-control", placeholder="https://github.com/username") }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-globe"></i> Website URL
+                                </label>
+                                {{ form.website_url(class="form-control", placeholder="https://yourwebsite.com") }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Branding (Optional) -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Custom Branding (Optional)</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small">Override default brand settings for this employee</p>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.custom_primary_color.label(class="form-label") }}
+                                <div class="input-group">
+                                    {{ form.custom_primary_color(class="form-control", placeholder="#667eea") }}
+                                    <input type="color" class="form-control form-control-color"
+                                           id="colorPicker" value="{{ employee.custom_primary_color if employee and employee.custom_primary_color else '#667eea' }}">
+                                </div>
+                                <small class="text-muted">Hex color code</small>
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.custom_qr_style.label(class="form-label") }}
+                                {{ form.custom_qr_style(class="form-select") }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-2">
+                            {{ form.is_active(class="form-check-input") }}
+                            {{ form.is_active.label(class="form-check-label") }}
+                            <small class="text-muted d-block">Active employees can access their profiles</small>
+                        </div>
+                        <div class="form-check">
+                            {{ form.show_in_directory(class="form-check-input") }}
+                            {{ form.show_in_directory.label(class="form-check-label") }}
+                            <small class="text-muted d-block">Show in public employee directory</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-flex gap-2 mb-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> {{ 'Update Employee' if employee else 'Create Employee' }}
+                    </button>
+                    <a href="{{ url_for('employee_directory') }}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    {% if employee %}
+                    <button type="button" class="btn btn-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+
+            {% if employee %}
+            <!-- Delete Confirmation Modal -->
+            <div class="modal fade" id="deleteModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirm Delete</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to delete this employee profile?</p>
+                            <p class="text-danger">This action cannot be undone and will also delete the vCard profile.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <form method="POST" action="{{ url_for('employee_delete', employee_id=employee.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-danger">Delete Employee</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Color picker sync
+document.addEventListener('DOMContentLoaded', function() {
+    const colorInput = document.getElementById('{{ form.custom_primary_color.id }}');
+    const colorPicker = document.getElementById('colorPicker');
+
+    if (colorInput && colorPicker) {
+        colorPicker.addEventListener('change', function() {
+            colorInput.value = this.value;
+        });
+
+        colorInput.addEventListener('input', function() {
+            if (this.value.match(/^#[0-9A-F]{6}$/i)) {
+                colorPicker.value = this.value;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

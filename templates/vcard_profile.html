@@ -1,0 +1,452 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ employee.user.first_name }} {{ employee.user.last_name }} - vCard{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!-- Apply brand theming if available -->
+{% if brand_css %}
+<style>
+{{ brand_css|safe }}
+</style>
+{% endif %}
+
+<style>
+:root {
+    --profile-primary: {{ employee.custom_primary_color if employee.custom_primary_color else (current_brand.primary_color if current_brand else '#667eea') }};
+    --profile-secondary: {{ current_brand.secondary_color if current_brand else '#764ba2') }};
+}
+
+.vcard-profile {
+    background: linear-gradient(135deg, var(--profile-primary), var(--profile-secondary));
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.profile-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.profile-header {
+    background: linear-gradient(135deg, var(--profile-primary), var(--profile-secondary));
+    padding: 3rem 2rem;
+    text-align: center;
+    color: white;
+}
+
+.profile-image {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 5px solid white;
+    object-fit: cover;
+    margin: 0 auto 1rem;
+    display: block;
+}
+
+.profile-initials {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 5px solid white;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: bold;
+    margin: 0 auto 1rem;
+}
+
+.profile-name {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.profile-title {
+    font-size: 1.2rem;
+    opacity: 0.95;
+    font-weight: 400;
+}
+
+.profile-body {
+    padding: 2rem;
+}
+
+.contact-item {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+}
+
+.contact-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.contact-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--profile-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.social-links a {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.3s;
+    margin: 0 0.5rem;
+}
+
+.social-links a:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.action-btn {
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.action-btn-primary {
+    background: var(--profile-primary);
+    color: white;
+}
+
+.action-btn-primary:hover {
+    background: var(--profile-secondary);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.action-btn-outline {
+    background: white;
+    color: var(--profile-primary);
+    border: 2px solid var(--profile-primary);
+}
+
+.action-btn-outline:hover {
+    background: var(--profile-primary);
+    color: white;
+}
+
+.qr-code-section {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.brand-logo {
+    max-width: 150px;
+    margin-bottom: 1rem;
+}
+
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+/* Dark mode */
+body.dark-mode {
+    background: #1a1a1a;
+}
+
+body.dark-mode .profile-card {
+    background: #2d2d2d;
+    color: #f8f9fa;
+}
+
+body.dark-mode .contact-item {
+    background: #3d3d3d;
+}
+
+body.dark-mode .contact-item:hover {
+    background: #4d4d4d;
+}
+
+body.dark-mode .qr-code-section {
+    background: #3d3d3d;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vcard-profile">
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <button class="btn btn-light btn-sm" id="themeToggle" title="Toggle dark mode">
+            <i class="bi bi-moon-stars" id="themeIcon"></i>
+        </button>
+    </div>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="profile-card">
+                    <!-- Header with Photo -->
+                    <div class="profile-header">
+                        {% if current_brand and current_brand.logo %}
+                        <img src="{{ url_for('static', filename='uploads/' + current_brand.logo) }}"
+                             class="brand-logo" alt="{{ current_brand.name }}">
+                        {% endif %}
+
+                        {% if employee.profile_image %}
+                        <img src="{{ url_for('static', filename='uploads/profiles/' + employee.profile_image) }}"
+                             class="profile-image" alt="{{ employee.user.first_name }} {{ employee.user.last_name }}">
+                        {% else %}
+                        <div class="profile-initials">
+                            {{ employee.user.first_name[0] }}{{ employee.user.last_name[0] }}
+                        </div>
+                        {% endif %}
+
+                        <h1 class="profile-name">
+                            {{ employee.user.first_name }} {{ employee.user.last_name }}
+                        </h1>
+                        <p class="profile-title">{{ employee.designation }}</p>
+                        {% if employee.department %}
+                        <p class="mb-0 opacity-75">{{ employee.department }}</p>
+                        {% endif %}
+                        {% if employee.brand %}
+                        <p class="mb-0 mt-2">
+                            <span class="badge bg-light text-dark">{{ employee.brand.name }}</span>
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Body with Contact Info -->
+                    <div class="profile-body">
+                        {% if employee.bio %}
+                        <div class="mb-4 text-center">
+                            <p class="lead">{{ employee.bio }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Contact Information -->
+                        <h3 class="mb-3">📞 Contact Information</h3>
+
+                        {% if employee.work_email %}
+                        <div class="contact-item">
+                            <div class="d-flex align-items-center">
+                                <div class="contact-icon me-3">
+                                    <i class="bi bi-envelope-fill"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Email</small>
+                                    <a href="mailto:{{ employee.work_email }}" class="text-decoration-none">
+                                        {{ employee.work_email }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if employee.work_phone %}
+                        <div class="contact-item">
+                            <div class="d-flex align-items-center">
+                                <div class="contact-icon me-3">
+                                    <i class="bi bi-telephone-fill"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Work Phone</small>
+                                    <a href="tel:{{ employee.work_phone }}" class="text-decoration-none">
+                                        {{ employee.work_phone }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if employee.mobile %}
+                        <div class="contact-item">
+                            <div class="d-flex align-items-center">
+                                <div class="contact-icon me-3">
+                                    <i class="bi bi-phone-fill"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Mobile</small>
+                                    <a href="tel:{{ employee.mobile }}" class="text-decoration-none">
+                                        {{ employee.mobile }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if employee.office_address %}
+                        <div class="contact-item">
+                            <div class="d-flex align-items-center">
+                                <div class="contact-icon me-3">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Office Address</small>
+                                    <address class="mb-0">{{ employee.office_address }}</address>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if employee.website_url %}
+                        <div class="contact-item">
+                            <div class="d-flex align-items-center">
+                                <div class="contact-icon me-3">
+                                    <i class="bi bi-globe"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Website</small>
+                                    <a href="{{ employee.website_url }}" target="_blank" class="text-decoration-none">
+                                        {{ employee.website_url }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Social Links -->
+                        {% if employee.linkedin_url or employee.twitter_url or employee.facebook_url or employee.instagram_url or employee.github_url %}
+                        <h3 class="mb-3 mt-4">🌐 Connect with Me</h3>
+                        <div class="social-links text-center mb-4">
+                            {% if employee.linkedin_url %}
+                            <a href="{{ employee.linkedin_url }}" target="_blank" class="btn btn-primary">
+                                <i class="bi bi-linkedin"></i>
+                            </a>
+                            {% endif %}
+                            {% if employee.twitter_url %}
+                            <a href="{{ employee.twitter_url }}" target="_blank" class="btn btn-info">
+                                <i class="bi bi-twitter"></i>
+                            </a>
+                            {% endif %}
+                            {% if employee.facebook_url %}
+                            <a href="{{ employee.facebook_url }}" target="_blank" class="btn btn-primary">
+                                <i class="bi bi-facebook"></i>
+                            </a>
+                            {% endif %}
+                            {% if employee.instagram_url %}
+                            <a href="{{ employee.instagram_url }}" target="_blank" class="btn btn-danger">
+                                <i class="bi bi-instagram"></i>
+                            </a>
+                            {% endif %}
+                            {% if employee.github_url %}
+                            <a href="{{ employee.github_url }}" target="_blank" class="btn btn-dark">
+                                <i class="bi bi-github"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-3 mt-4">
+                            <button onclick="downloadVCard()" class="action-btn action-btn-primary">
+                                <i class="bi bi-download"></i> Save to Contacts
+                            </button>
+                            <button onclick="shareProfile()" class="action-btn action-btn-outline">
+                                <i class="bi bi-share"></i> Share Profile
+                            </button>
+                        </div>
+
+                        <!-- QR Code -->
+                        {% if vcard_profile.show_qr_code and vcard_profile.qr_code_id %}
+                        <div class="qr-code-section mt-4">
+                            <h4 class="mb-3">📱 Scan to Save</h4>
+                            <img src="{{ url_for('qr_image', qr_id=vcard_profile.qr_code_id) }}"
+                                 alt="QR Code" class="img-fluid" style="max-width: 200px;">
+                            <p class="text-muted small mt-2">Scan with your phone to save my contact</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="text-center mt-4 text-white">
+                    <p class="mb-0">
+                        <small>Powered by IBQ QR Code Generator</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Theme toggle
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon = document.getElementById('themeIcon');
+const body = document.body;
+
+// Check for saved theme preference
+const savedTheme = localStorage.getItem('vcard-theme');
+if (savedTheme === 'dark') {
+    body.classList.add('dark-mode');
+    themeIcon.className = 'bi bi-sun-fill';
+}
+
+themeToggle.addEventListener('click', () => {
+    body.classList.toggle('dark-mode');
+
+    if (body.classList.contains('dark-mode')) {
+        themeIcon.className = 'bi bi-sun-fill';
+        localStorage.setItem('vcard-theme', 'dark');
+    } else {
+        themeIcon.className = 'bi bi-moon-stars';
+        localStorage.setItem('vcard-theme', 'light');
+    }
+});
+
+// Download vCard
+function downloadVCard() {
+    window.location.href = '{{ url_for("vcard_download", slug=vcard_profile.slug) }}';
+}
+
+// Share profile
+async function shareProfile() {
+    const shareData = {
+        title: '{{ employee.user.first_name }} {{ employee.user.last_name }}',
+        text: '{{ employee.designation }} - Contact Card',
+        url: window.location.href
+    };
+
+    try {
+        if (navigator.share) {
+            await navigator.share(shareData);
+        } else {
+            // Fallback: copy to clipboard
+            await navigator.clipboard.writeText(window.location.href);
+            alert('Profile link copied to clipboard!');
+        }
+    } catch (err) {
+        console.error('Error sharing:', err);
+    }
+}
+
+// Track view
+fetch('{{ url_for("vcard_track_view", slug=vcard_profile.slug) }}', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    }
+});
+</script>
+{% endblock %}
