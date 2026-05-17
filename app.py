@@ -16,7 +16,7 @@ from forms import (LoginForm, RegistrationForm, QRCodeGenerateForm, QRCodeEditFo
                    PasswordResetRequestForm, PasswordResetForm, BrandForm)
 from utils import (generate_vcard, create_qr_code, create_qr_code_svg, save_qr_code,
                    generate_filename, get_qr_code_base64, generate_qr_data)
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, text
 
 # Import production middleware
 try:
@@ -32,6 +32,63 @@ except ImportError:
 # Constants
 MAX_VCARD_FILENAME_LENGTH = 50
 PUBLIC_TOKEN_LENGTH = 16
+
+def _run_database_migrations():
+    """Run database migrations to add missing columns to existing tables."""
+    try:
+        # Add new columns to existing tables using raw SQL (for existing databases)
+        with db.engine.connect() as conn:
+            # Brand table enhancements
+            brand_columns = [
+                "ALTER TABLE brands ADD COLUMN IF NOT EXISTS organization_id INTEGER",
+                "ALTER TABLE brands ADD COLUMN IF NOT EXISTS slug VARCHAR(100)",
+                "ALTER TABLE brands ADD COLUMN IF NOT EXISTS favicon VARCHAR(255)",
+                "ALTER TABLE brands ADD COLUMN IF NOT EXISTS background_color VARCHAR(7) DEFAULT '#ffffff'",
+                "ALTER TABLE brands ADD COLUMN IF NOT EXISTS font_family VARCHAR(100) DEFAULT 'Inter'",
+                "ALTER TABLE brands ADD COLUMN IF NOT EXISTS button_style VARCHAR(50) DEFAULT 'rounded'",
+                "ALTER TABLE brands ADD COLUMN IF NOT EXISTS card_style VARCHAR(50) DEFAULT 'shadow'",
+                "ALTER TABLE brands ADD COLUMN IF NOT EXISTS qr_style_preset VARCHAR(50) DEFAULT 'modern'",
+                "ALTER TABLE brands ADD COLUMN IF NOT EXISTS employee_card_theme JSON",
+                "ALTER TABLE brands ADD COLUMN IF NOT EXISTS landing_page_theme JSON",
+            ]
+
+            for sql in brand_columns:
+                try:
+                    conn.execute(text(sql))
+                    conn.commit()
+                except Exception:
+                    pass  # Column already exists
+
+            # User table enhancements
+            user_columns = [
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS organization_id INTEGER",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'",
+            ]
+
+            for sql in user_columns:
+                try:
+                    conn.execute(text(sql))
+                    conn.commit()
+                except Exception:
+                    pass  # Column already exists
+
+            # Add indexes
+            indexes = [
+                "CREATE INDEX IF NOT EXISTS idx_brands_slug ON brands(slug)",
+                "CREATE INDEX IF NOT EXISTS idx_brands_org ON brands(organization_id)",
+                "CREATE INDEX IF NOT EXISTS idx_users_org ON users(organization_id)",
+            ]
+
+            for sql in indexes:
+                try:
+                    conn.execute(text(sql))
+                    conn.commit()
+                except Exception:
+                    pass  # Index already exists
+
+    except Exception as e:
+        print(f"Migration warning: {e}")
+        # Don't fail if migrations have issues - the app should still start
 
 def create_app(config_name='default'):
     """Application factory."""
@@ -84,7 +141,10 @@ def create_app(config_name='default'):
     # Create database tables
     with app.app_context():
         db.create_all()
-        
+
+        # Run migrations for existing databases
+        _run_database_migrations()
+
         # Create default admin user if no users exist
         if User.query.count() == 0:
             admin = User(
