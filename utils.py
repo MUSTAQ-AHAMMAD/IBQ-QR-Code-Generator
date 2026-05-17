@@ -103,7 +103,7 @@ def create_qr_code(data, settings=None, logo_path=None):
     # Resize if needed
     size = settings.get('size', 300)
     if size:
-        img = img.resize((size, size), Image.LANCZOS)
+        img = img.resize((size, size), Image.Resampling.LANCZOS)
     
     # Add logo if provided (priority to function parameter)
     if logo_path and os.path.exists(logo_path):
@@ -178,7 +178,7 @@ def add_logo_to_qr(qr_img, logo_path, logo_size_ratio=0.3):
         logo_size = int(min(qr_width, qr_height) * logo_size_ratio)
         
         # Resize logo maintaining aspect ratio
-        logo.thumbnail((logo_size, logo_size), Image.LANCZOS)
+        logo.thumbnail((logo_size, logo_size), Image.Resampling.LANCZOS)
         
         # Create white background with some padding
         padding = 10
