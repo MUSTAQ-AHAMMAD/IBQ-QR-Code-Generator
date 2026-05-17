@@ -94,11 +94,26 @@ def _run_database_migrations():
                     print(f"Warning adding column {col_name} to users: {e}")
                     pass  # Column may already exist or table doesn't exist yet
 
+            # QR codes table enhancements
+            qr_codes_migrations = [
+                ("brand_id", "ALTER TABLE qr_codes ADD COLUMN brand_id INTEGER"),
+            ]
+
+            for col_name, sql in qr_codes_migrations:
+                try:
+                    if not column_exists('qr_codes', col_name):
+                        conn.execute(text(sql))
+                        conn.commit()
+                except Exception as e:
+                    print(f"Warning adding column {col_name} to qr_codes: {e}")
+                    pass  # Column may already exist or table doesn't exist yet
+
             # Add indexes
             indexes = [
                 ("brands", "idx_brands_slug", "CREATE INDEX idx_brands_slug ON brands(slug)"),
                 ("brands", "idx_brands_org", "CREATE INDEX idx_brands_org ON brands(organization_id)"),
                 ("users", "idx_users_org", "CREATE INDEX idx_users_org ON users(organization_id)"),
+                ("qr_codes", "idx_qr_codes_brand", "CREATE INDEX idx_qr_codes_brand ON qr_codes(brand_id)"),
             ]
 
             for table_name, idx_name, sql in indexes:
