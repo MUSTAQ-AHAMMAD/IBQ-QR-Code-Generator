@@ -10,7 +10,7 @@ from flask_wtf.csrf import generate_csrf
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
 from config import config
-from models import db, User, QRCode, Template, AuditLog, Brand
+from models import db, User, QRCode, Template, AuditLog, Brand, Organization, Employee, VCardProfile, QRScan, Theme, Asset
 from forms import (LoginForm, RegistrationForm, QRCodeGenerateForm, QRCodeEditForm,
                    TemplateForm, ProfileForm, ChangePasswordForm, AccountSettingsForm,
                    PasswordResetRequestForm, PasswordResetForm, BrandForm)
