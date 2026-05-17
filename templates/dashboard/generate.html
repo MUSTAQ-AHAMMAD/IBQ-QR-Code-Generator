@@ -452,13 +452,18 @@
         <div class="alert alert-info" role="alert">
             <i class="bi bi-info-circle me-2"></i>
             <strong>Real-time Preview</strong><br>
-            <small>The QR code updates automatically as you type. Click "Generate QR Code" to save and download.</small>
+            <small>The QR code updates automatically as you type. Click "Generate QR Code" below to save and download your QR code.</small>
         </div>
 
-        <div class="qr-download-buttons mt-3" style="display: none;" id="quickDownloadSection">
-            <button type="button" class="btn btn-success" onclick="document.getElementById('qrCodeForm').submit()">
-                <i class="bi bi-save me-2"></i>Save & Download
-            </button>
+        <div class="mt-3">
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-outline-primary" onclick="if(document.getElementById('qrPreviewImage')){document.getElementById('qrPreviewImage').style.transform='scale(1.5)';setTimeout(()=>document.getElementById('qrPreviewImage').style.transform='scale(1)',300)}">
+                    <i class="bi bi-zoom-in me-2"></i>Quick View
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="window.qrGenerator.generatePreview()">
+                    <i class="bi bi-arrow-clockwise me-2"></i>Refresh Preview
+                </button>
+            </div>
         </div>
     </div>
 </div>
