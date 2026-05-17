@@ -11,13 +11,14 @@
                 <li class="breadcrumb-item active">Generate QR Code</li>
             </ol>
         </nav>
-        <h2>Generate QR Code</h2>
-        <p class="text-muted">Create a QR code for various purposes</p>
+        <h2><i class="bi bi-qr-code me-2"></i>Generate QR Code</h2>
+        <p class="text-muted">Create and customize your QR code with real-time preview</p>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-8">
+<div class="qr-generator-container">
+    <!-- Form Section (Left) -->
+    <div class="qr-form-section">
         <div class="card">
             <div class="card-body">
                 <form method="POST" novalidate id="qrCodeForm" enctype="multipart/form-data">
@@ -427,209 +428,44 @@
                     </div>
                     
                     <hr class="my-4">
-                    
-                    <div class="d-grid gap-2">
+                    <div class="qr-action-buttons">
                         {{ form.submit(class="btn btn-primary btn-lg") }}
-                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-lg">Cancel</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    
-    <div class="col-lg-4">
-        <div class="card sticky-top" style="top: 20px;">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>QR Code Types</h5>
+
+    <!-- Preview Section (Right) -->
+    <div class="qr-preview-section">
+        <h4 class="mb-3"><i class="bi bi-eye me-2"></i>Live Preview</h4>
+
+        <div class="qr-preview-box" id="qrPreviewBox">
+            <div class="qr-preview-placeholder">
+                <i class="bi bi-qr-code"></i>
+                <p>Your QR code will appear here</p>
+                <small class="text-muted">Start filling the form to see preview</small>
             </div>
-            <div class="card-body">
-                <div id="tips-content">
-                    <h6>Select a Type</h6>
-                    <p class="small">Choose a QR code type from the dropdown to see specific information and tips for that type.</p>
-                </div>
-            </div>
+        </div>
+
+        <div class="alert alert-info" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Real-time Preview</strong><br>
+            <small>The QR code updates automatically as you type. Click "Generate QR Code" to save and download.</small>
+        </div>
+
+        <div class="qr-download-buttons mt-3" style="display: none;" id="quickDownloadSection">
+            <button type="button" class="btn btn-success" onclick="document.getElementById('qrCodeForm').submit()">
+                <i class="bi bi-save me-2"></i>Save & Download
+            </button>
         </div>
     </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/qr-generator.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const qrTypeSelect = document.getElementById('qrType');
-    const allFields = document.querySelectorAll('.qr-type-fields');
-    
-    // Tips for each QR code type
-    const tips = {
-        'vcard': `
-            <h6>Business Card QR Codes</h6>
-            <p class="small">Your QR code will be generated in vCard format, which can be easily scanned by smartphones to save contact information.</p>
-            <ul class="small mb-0">
-                <li>Fill in as much contact information as possible</li>
-                <li>Include your photo URL for a complete profile</li>
-                <li>Test the QR code after generation</li>
-            </ul>
-        `,
-        'url': `
-            <h6>Website URL QR Codes</h6>
-            <p class="small">Direct users to your website or any URL by scanning the QR code.</p>
-            <ul class="small mb-0">
-                <li>Always include https:// in the URL</li>
-                <li>Shorter URLs work better</li>
-                <li>Test the link before generating</li>
-            </ul>
-        `,
-        'text': `
-            <h6>Plain Text QR Codes</h6>
-            <p class="small">Encode any text information into a QR code.</p>
-            <ul class="small mb-0">
-                <li>Maximum 2000 characters recommended</li>
-                <li>Shorter text = smaller, easier to scan QR codes</li>
-                <li>Great for instructions, messages, or codes</li>
-            </ul>
-        `,
-        'email': `
-            <h6>Email QR Codes</h6>
-            <p class="small">Create a QR code that opens an email client with pre-filled information.</p>
-            <ul class="small mb-0">
-                <li>Subject and body are optional</li>
-                <li>Great for contact forms and support</li>
-                <li>Works with all email clients</li>
-            </ul>
-        `,
-        'sms': `
-            <h6>SMS / Text Message QR Codes</h6>
-            <p class="small">Create a QR code that opens SMS with a pre-filled message.</p>
-            <ul class="small mb-0">
-                <li>Include country code in phone number</li>
-                <li>Message is optional</li>
-                <li>Great for quick responses</li>
-            </ul>
-        `,
-        'phone': `
-            <h6>Phone Number QR Codes</h6>
-            <p class="small">Create a QR code that initiates a phone call.</p>
-            <ul class="small mb-0">
-                <li>Always include country code</li>
-                <li>Format: +1234567890</li>
-                <li>Perfect for business cards</li>
-            </ul>
-        `,
-        'wifi': `
-            <h6>WiFi Network QR Codes</h6>
-            <p class="small">Allow users to connect to WiFi by scanning a QR code.</p>
-            <ul class="small mb-0">
-                <li>Enter exact network name (SSID)</li>
-                <li>Choose correct security type</li>
-                <li>Great for guests and public spaces</li>
-            </ul>
-        `,
-        'facebook': `
-            <h6>Facebook Profile QR Codes</h6>
-            <p class="small">Link to your Facebook profile or page.</p>
-            <ul class="small mb-0">
-                <li>Use your full Facebook URL</li>
-                <li>Works for profiles and pages</li>
-                <li>Great for marketing materials</li>
-            </ul>
-        `,
-        'twitter': `
-            <h6>Twitter Profile QR Codes</h6>
-            <p class="small">Link to your Twitter profile.</p>
-            <ul class="small mb-0">
-                <li>Use your full Twitter URL</li>
-                <li>Perfect for business cards</li>
-                <li>Increase your followers</li>
-            </ul>
-        `,
-        'instagram': `
-            <h6>Instagram Profile QR Codes</h6>
-            <p class="small">Link to your Instagram profile.</p>
-            <ul class="small mb-0">
-                <li>Use your full Instagram URL</li>
-                <li>Great for promotional materials</li>
-                <li>Boost your followers</li>
-            </ul>
-        `,
-        'linkedin': `
-            <h6>LinkedIn Profile QR Codes</h6>
-            <p class="small">Link to your LinkedIn profile.</p>
-            <ul class="small mb-0">
-                <li>Use your full LinkedIn URL</li>
-                <li>Perfect for networking events</li>
-                <li>Professional connections</li>
-            </ul>
-        `,
-        'youtube': `
-            <h6>YouTube Channel QR Codes</h6>
-            <p class="small">Link to your YouTube channel or video.</p>
-            <ul class="small mb-0">
-                <li>Use your full YouTube URL</li>
-                <li>Works for channels and videos</li>
-                <li>Great for video marketing</li>
-            </ul>
-        `,
-        'app_store': `
-            <h6>App Store Link QR Codes</h6>
-            <p class="small">Direct users to your app on the Apple App Store.</p>
-            <ul class="small mb-0">
-                <li>Use the full App Store URL</li>
-                <li>Perfect for app marketing</li>
-                <li>Increase downloads</li>
-            </ul>
-        `,
-        'google_play': `
-            <h6>Google Play Store QR Codes</h6>
-            <p class="small">Direct users to your app on Google Play.</p>
-            <ul class="small mb-0">
-                <li>Use the full Play Store URL</li>
-                <li>Great for Android users</li>
-                <li>Boost app installs</li>
-            </ul>
-        `,
-        'event': `
-            <h6>Calendar Event QR Codes</h6>
-            <p class="small">Add events to calendars by scanning.</p>
-            <ul class="small mb-0">
-                <li>Include all event details</li>
-                <li>Use proper date/time format</li>
-                <li>Perfect for invitations</li>
-            </ul>
-        `,
-        'location': `
-            <h6>Location / Map QR Codes</h6>
-            <p class="small">Direct users to a specific location on maps.</p>
-            <ul class="small mb-0">
-                <li>Use accurate coordinates</li>
-                <li>Add location name for context</li>
-                <li>Great for directions</li>
-            </ul>
-        `
-    };
-    
-    function showFieldsForType(type) {
-        // Hide all fields
-        allFields.forEach(field => field.style.display = 'none');
-        
-        // Show relevant fields
-        const fieldsToShow = document.getElementById('fields-' + type);
-        if (fieldsToShow) {
-            fieldsToShow.style.display = 'block';
-        }
-        
-        // Update tips
-        const tipsContent = document.getElementById('tips-content');
-        if (tips[type]) {
-            tipsContent.innerHTML = tips[type];
-        }
-    }
-    
-    // Initial display
-    showFieldsForType(qrTypeSelect.value);
-    
-    // On change event
-    qrTypeSelect.addEventListener('change', function() {
-        showFieldsForType(this.value);
-    });
-    
     // Image preview functionality
     const contactImageInput = document.getElementById('contactImage');
     if (contactImageInput) {
@@ -640,19 +476,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (file.size > 5 * 1024 * 1024) {
                     alert('File size must be less than 5MB');
                     e.target.value = '';
-                    document.getElementById('imagePreview').style.display = 'none';
+                    const imagePreview = document.getElementById('imagePreview');
+                    if (imagePreview) imagePreview.style.display = 'none';
                     return;
                 }
-                
+
                 // Preview image
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    document.getElementById('previewImg').src = event.target.result;
-                    document.getElementById('imagePreview').style.display = 'block';
+                    const previewImg = document.getElementById('previewImg');
+                    const imagePreview = document.getElementById('imagePreview');
+                    if (previewImg && imagePreview) {
+                        previewImg.src = event.target.result;
+                        imagePreview.style.display = 'block';
+                    }
                 };
                 reader.readAsDataURL(file);
             } else {
-                document.getElementById('imagePreview').style.display = 'none';
+                const imagePreview = document.getElementById('imagePreview');
+                if (imagePreview) imagePreview.style.display = 'none';
             }
         });
     }

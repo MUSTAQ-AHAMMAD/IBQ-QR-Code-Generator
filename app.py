@@ -1135,6 +1135,56 @@ def create_app(config_name='default'):
             abort(404)
         return send_file(abs_file_path)
 
+    @app.route('/api/preview-qr', methods=['POST'])
+    @login_required
+    def preview_qr():
+        """Generate QR code preview without saving to database."""
+        try:
+            data = request.get_json()
+
+            # Get QR type and form data
+            qr_type = data.get('qr_type', 'url')
+            form_data = data.get('form_data', {})
+
+            # Generate QR data based on type
+            qr_data = generate_qr_data(qr_type, form_data)
+
+            # QR code settings
+            settings = {
+                'size': int(data.get('size', 300)),
+                'foreground_color': data.get('foreground_color', '#000000'),
+                'background_color': data.get('background_color', '#FFFFFF'),
+                'error_correction': data.get('error_correction', 'H'),
+                'border': int(data.get('border', 4)),
+                'qr_style': data.get('qr_style', 'square'),
+                'gradient_enabled': data.get('gradient_enabled', False),
+                'gradient_color': data.get('gradient_color') if data.get('gradient_enabled') else None,
+                'gradient_type': data.get('gradient_type', 'linear'),
+                'frame_style': data.get('frame_style', 'none'),
+                'frame_text': data.get('frame_text') if data.get('frame_style') != 'none' else None,
+                'frame_color': data.get('frame_color', '#000000'),
+                'eye_style': data.get('eye_style', 'square'),
+                'data_style': data.get('data_style', 'square')
+            }
+
+            # Generate QR code image
+            qr_img = create_qr_code(qr_data, settings)
+
+            # Convert to base64
+            img_base64 = get_qr_code_base64(qr_img)
+
+            return jsonify({
+                'success': True,
+                'image': img_base64,
+                'data': qr_data
+            })
+
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e)
+            }), 400
+
     @app.route('/help')
     @login_required
     def help_page():
