@@ -64,6 +64,16 @@ This error typically occurs due to missing Python dependencies (Flask and relate
 #### Issue: "No module named 'flask'"
 **Solution:** Your virtual environment doesn't have Flask installed. Follow steps above to install requirements.
 
+#### Issue: PIL/Pillow AttributeError with Image.LANCZOS
+**Problem:** Error like `AttributeError: module 'PIL.Image' has no attribute 'LANCZOS'` at line 97 in PIL/Image.py or when using QR code generation features.
+
+**Root Cause:** Pillow 10.0.0+ deprecated direct access to resampling filters like `Image.LANCZOS`. These have been moved to `Image.Resampling.LANCZOS`.
+
+**Solution:** This has been fixed in the codebase. All references to deprecated constants like `Image.LANCZOS` have been updated to `Image.Resampling.LANCZOS`. If you see this error:
+1. Pull the latest code: `git pull origin main`
+2. Reinstall Pillow: `pip install --upgrade Pillow>=11.0.0`
+3. Restart the application
+
 #### Issue: "No module named 'werkzeug'" or similar
 **Solution:** Some dependencies are missing. Run `pip install -r requirements.txt` again.
 
