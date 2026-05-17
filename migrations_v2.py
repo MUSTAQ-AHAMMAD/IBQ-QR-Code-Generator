@@ -19,62 +19,92 @@ def run_migrations():
 
         # Add new columns to existing tables using raw SQL (for existing databases)
         try:
+            from sqlalchemy import inspect
+
             with db.engine.connect() as conn:
+                inspector = inspect(db.engine)
+
+                # Helper function to check if column exists
+                def column_exists(table_name, column_name):
+                    if table_name not in inspector.get_table_names():
+                        return False
+                    columns = [col['name'] for col in inspector.get_columns(table_name)]
+                    return column_name in columns
+
+                # Helper function to check if index exists
+                def index_exists(table_name, index_name):
+                    if table_name not in inspector.get_table_names():
+                        return False
+                    indexes = [idx['name'] for idx in inspector.get_indexes(table_name)]
+                    return index_name in indexes
+
                 # Brand table enhancements
                 print("Enhancing brands table...")
-                brand_columns = [
-                    "ALTER TABLE brands ADD COLUMN IF NOT EXISTS organization_id INTEGER",
-                    "ALTER TABLE brands ADD COLUMN IF NOT EXISTS slug VARCHAR(100) UNIQUE",
-                    "ALTER TABLE brands ADD COLUMN IF NOT EXISTS favicon VARCHAR(255)",
-                    "ALTER TABLE brands ADD COLUMN IF NOT EXISTS background_color VARCHAR(7) DEFAULT '#ffffff'",
-                    "ALTER TABLE brands ADD COLUMN IF NOT EXISTS font_family VARCHAR(100) DEFAULT 'Inter'",
-                    "ALTER TABLE brands ADD COLUMN IF NOT EXISTS button_style VARCHAR(50) DEFAULT 'rounded'",
-                    "ALTER TABLE brands ADD COLUMN IF NOT EXISTS card_style VARCHAR(50) DEFAULT 'shadow'",
-                    "ALTER TABLE brands ADD COLUMN IF NOT EXISTS qr_style_preset VARCHAR(50) DEFAULT 'modern'",
-                    "ALTER TABLE brands ADD COLUMN IF NOT EXISTS employee_card_theme JSON",
-                    "ALTER TABLE brands ADD COLUMN IF NOT EXISTS landing_page_theme JSON",
+                brand_migrations = [
+                    ("organization_id", "ALTER TABLE brands ADD COLUMN organization_id INTEGER"),
+                    ("slug", "ALTER TABLE brands ADD COLUMN slug VARCHAR(100)"),
+                    ("favicon", "ALTER TABLE brands ADD COLUMN favicon VARCHAR(255)"),
+                    ("background_color", "ALTER TABLE brands ADD COLUMN background_color VARCHAR(7) DEFAULT '#ffffff'"),
+                    ("font_family", "ALTER TABLE brands ADD COLUMN font_family VARCHAR(100) DEFAULT 'Inter'"),
+                    ("button_style", "ALTER TABLE brands ADD COLUMN button_style VARCHAR(50) DEFAULT 'rounded'"),
+                    ("card_style", "ALTER TABLE brands ADD COLUMN card_style VARCHAR(50) DEFAULT 'shadow'"),
+                    ("qr_style_preset", "ALTER TABLE brands ADD COLUMN qr_style_preset VARCHAR(50) DEFAULT 'modern'"),
+                    ("employee_card_theme", "ALTER TABLE brands ADD COLUMN employee_card_theme JSON"),
+                    ("landing_page_theme", "ALTER TABLE brands ADD COLUMN landing_page_theme JSON"),
                 ]
 
-                for sql in brand_columns:
+                for col_name, sql in brand_migrations:
                     try:
-                        conn.execute(text(sql))
-                        conn.commit()
+                        if not column_exists('brands', col_name):
+                            conn.execute(text(sql))
+                            conn.commit()
+                            print(f"  Added column: {col_name}")
+                        else:
+                            print(f"  Column already exists: {col_name}")
                     except Exception as e:
-                        print(f"Column might already exist: {e}")
+                        print(f"  Error adding column {col_name}: {e}")
 
                 # User table enhancements
                 print("Enhancing users table...")
-                user_columns = [
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS organization_id INTEGER",
-                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'",
+                user_migrations = [
+                    ("organization_id", "ALTER TABLE users ADD COLUMN organization_id INTEGER"),
+                    ("role", "ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'user'"),
                 ]
 
-                for sql in user_columns:
+                for col_name, sql in user_migrations:
                     try:
-                        conn.execute(text(sql))
-                        conn.commit()
+                        if not column_exists('users', col_name):
+                            conn.execute(text(sql))
+                            conn.commit()
+                            print(f"  Added column: {col_name}")
+                        else:
+                            print(f"  Column already exists: {col_name}")
                     except Exception as e:
-                        print(f"Column might already exist: {e}")
+                        print(f"  Error adding column {col_name}: {e}")
 
                 # Add indexes
                 print("Adding indexes...")
                 indexes = [
-                    "CREATE INDEX IF NOT EXISTS idx_brands_slug ON brands(slug)",
-                    "CREATE INDEX IF NOT EXISTS idx_brands_org ON brands(organization_id)",
-                    "CREATE INDEX IF NOT EXISTS idx_users_org ON users(organization_id)",
-                    "CREATE INDEX IF NOT EXISTS idx_employees_user ON employees(user_id)",
-                    "CREATE INDEX IF NOT EXISTS idx_employees_brand ON employees(brand_id)",
-                    "CREATE INDEX IF NOT EXISTS idx_qr_scans_timestamp ON qr_scans(scan_timestamp)",
-                    "CREATE INDEX IF NOT EXISTS idx_vcard_profiles_slug ON vcard_profiles(slug)",
-                    "CREATE INDEX IF NOT EXISTS idx_themes_slug ON themes(slug)",
+                    ("brands", "idx_brands_slug", "CREATE INDEX idx_brands_slug ON brands(slug)"),
+                    ("brands", "idx_brands_org", "CREATE INDEX idx_brands_org ON brands(organization_id)"),
+                    ("users", "idx_users_org", "CREATE INDEX idx_users_org ON users(organization_id)"),
+                    ("employees", "idx_employees_user", "CREATE INDEX idx_employees_user ON employees(user_id)"),
+                    ("employees", "idx_employees_brand", "CREATE INDEX idx_employees_brand ON employees(brand_id)"),
+                    ("qr_scans", "idx_qr_scans_timestamp", "CREATE INDEX idx_qr_scans_timestamp ON qr_scans(scan_timestamp)"),
+                    ("vcard_profiles", "idx_vcard_profiles_slug", "CREATE INDEX idx_vcard_profiles_slug ON vcard_profiles(slug)"),
+                    ("themes", "idx_themes_slug", "CREATE INDEX idx_themes_slug ON themes(slug)"),
                 ]
 
-                for sql in indexes:
+                for table_name, idx_name, sql in indexes:
                     try:
-                        conn.execute(text(sql))
-                        conn.commit()
+                        if not index_exists(table_name, idx_name):
+                            conn.execute(text(sql))
+                            conn.commit()
+                            print(f"  Created index: {idx_name}")
+                        else:
+                            print(f"  Index already exists: {idx_name}")
                     except Exception as e:
-                        print(f"Index might already exist: {e}")
+                        print(f"  Error creating index {idx_name}: {e}")
 
                 # Generate slugs for existing brands
                 print("Generating slugs for existing brands...")
